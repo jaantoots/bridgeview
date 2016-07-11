@@ -1,4 +1,5 @@
 """Provides methods for rendering the labelled model"""
+import os
 import numpy as np
 import bpy # pylint: disable=import-error
 from mathutils import Vector # pylint: disable=import-error
@@ -33,7 +34,6 @@ def new_camera():
 
 def randomise_camera(objects, camera=None):
     """Randomise the camera position with the objects in view"""
-
     camera = new_camera() if camera is None else camera
 
     # Position and face centre
@@ -70,3 +70,11 @@ class BoundingSphere():
                                        for x in objects]) for j in range(3)] for i in range(8)])
         self.centre = np.sum(box, axis=0)/8 if centre is None else centre
         self.radius = np.max(np.linalg.norm(box - centre, axis=1))
+
+def render(path, seq=0):
+    """Render the scene"""
+    if not os.path.exists(path):
+        os.makedirs(path)
+    bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.png".format(seq)) # limit 999
+
+    bpy.ops.render.render()
