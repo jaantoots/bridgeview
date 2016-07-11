@@ -12,7 +12,7 @@ class _LabelDict(dict):
 class Parts():
     """Class for identifying and labelling parts
 
-    Parts are identified by original color and then given semantic,
+    Parts are identified by name and then given semantic,
     geometric and instance labels.
 
     """

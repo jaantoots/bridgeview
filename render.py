@@ -8,7 +8,7 @@ def add_ground_plane():
     return bpy.context.object
 
 def randomize_sun(sun=None):
-    """Deletes a previous sun (if given) and creates a new one at a random angle"""
+    """Delete a previous sun (if given) and create a new one at a random angle"""
     bpy.ops.object.select_all(action='DESELECT')
     if sun is not None:
         sun.select = True
@@ -17,4 +17,15 @@ def randomize_sun(sun=None):
     polar = np.random.uniform(0, 17/18 * np.pi/2) # Not lower than 5 deg from horizon
     bpy.ops.object.lamp_add(type='SUN', location=(0, 0, 20),
                             rotation=(0, polar, np.random.uniform(0, 2*np.pi)))
-    return bpy.context.object
+    sun = bpy.context.object
+
+    # TODO: check results and modify sun size
+    sun.data.shadow_soft_size = 0.01 # Realistic sun is smaller than the defaul
+    return sun
+
+def add_camera(camera=None):
+    """Add a camera to the scene"""
+    bpy.ops.object.camera_add()
+    camera = bpy.context.object
+    bpy.data.scenes[0].camera = camera
+    return camera
