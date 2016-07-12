@@ -123,7 +123,7 @@ class Render():
         bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.vis.png".format(seq))
         bpy.ops.render.render(write_still=True)
 
-    def render_semantic(self, path, level, seq=0):
+    def render_semantic(self, level, path, seq=0):
         """Render the semantic labels; should have seq < 999 to avoid non-canonical naming"""
         if not os.path.exists(path):
             os.makedirs(path)
