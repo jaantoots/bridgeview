@@ -12,14 +12,8 @@ class _LabelDict(dict):
 # bpy.data.scenes[0].display_settings.display_device = 'None'
 
 class Parts():
-    """Class for identifying and labelling parts
-
-    Parts are identified by name and then given semantic labels.
-
-    """
-
-    def __init__(self, bridge):
-        self.bridge = bridge
+    """Identify parts by name and assign semantic labels as colors"""
+    def __init__(self):
         self.levels = []
         self.levels += [dict()] # 0: feature -> color
         self.levels += [dict()] # 1: structure -> color
@@ -60,7 +54,8 @@ class Parts():
         self.levels[0]['bridge'] = '#ffffff' # Bridge is white on level 0
 
         # Monochrome colors for non-bridge structures on level 1
-        for feature, color in zip(features, generate(hue='monochrome', count=len(features))):
+        for feature, color in zip(features, rand_color.generate(
+                hue='monochrome', count=len(features))):
             self.levels[1][feature] = color
 
     def color_level(self, level):
@@ -100,7 +95,7 @@ def _color_parts(part, color):
 
 def _color_object(obj, color):
     """Color an object with color"""
-    material_name = "{:s}.{:s}".format(obj.name, color)
+    material_name = "shadeless.{:s}".format(color)
 
     # Create a shadeless diffuse material with the right color if it does not exist
     if material_name in [material.name for material in bpy.data.materials]:
@@ -110,10 +105,13 @@ def _color_object(obj, color):
         material.use_shadeless = True
         material.diffuse_color = hex_to_rgb(color)
 
+    # Assign the material to object
+    obj.active_material = material
+
 def hex_to_rgb(color):
     """Convert a hex color code into rgb 3-tuple"""
     rgb = int(color[1:], 16)
-    r = ((rgb >> 16) & 255)/255
-    g = ((rgb >> 8) & 255)/255
-    b = ((rgb >> 0) & 255)/255
+    r = ((rgb >> 16) & 255)/255 # pylint: disable=invalid-name
+    g = ((rgb >> 8) & 255)/255 # pylint: disable=invalid-name
+    b = ((rgb >> 0) & 255)/255 # pylint: disable=invalid-name
     return r, g, b
