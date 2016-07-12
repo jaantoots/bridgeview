@@ -37,25 +37,32 @@ class Parts():
         """Define parts in a structure and color the structure and parts"""
         index = len(self.parts) # Number of structures defined previously
         rand_color = randomcolor.RandomColor()
-        hues = ['blue', 'red', 'purple', 'yellow', 'orange', 'green', 'pink']
+        hues = ['red', 'green', 'blue', 'purple', 'yellow', 'orange', 'pink']
         if index >= len(hues):
             index %= len(hues)
             print("labels: WARNING: reusing hue '{:s}'".format(hues[index]))
 
         self.parts[structure] += parts
-        self.levels[1][structure] = rand_color.generate(hue=hues[index])[0]
-        for part, color in zip(parts, rand_color.generate(hue=hues[index], count=len(parts))):
+        self.levels[1][structure] = rand_color.generate(hue=hues[index], luminosity='bright')[0]
+        for part, color in zip(parts, rand_color.generate(
+                hue=hues[index], count=len(parts), luminosity='bright')):
             self.levels[2][part] = color
 
+    def structure_from_dict(self, parts_dict):
+        """Define all structures in parts_dict"""
+        for structure, parts in parts_dict.items():
+            self.def_structure(structure, parts)
+
     def def_features(self, features):
-        """Define non-bridge features"""
+        """Define non-bridge features (should be called only once)"""
         rand_color = randomcolor.RandomColor()
-        self.levels[0] = {feature: rand_color.generate()[0] for feature in features}
+        self.levels[0] = {feature: rand_color.generate(luminosity='bright')[0]
+                          for feature in features}
         self.levels[0]['bridge'] = '#ffffff' # Bridge is white on level 0
 
         # Monochrome colors for non-bridge structures on level 1
         for feature, color in zip(features, rand_color.generate(
-                hue='monochrome', count=len(features))):
+                hue='monochrome', count=len(features), luminosity='bright')):
             self.levels[1][feature] = color
 
     def color_level(self, level):
@@ -106,6 +113,9 @@ def _color_object(obj, color):
         material.diffuse_color = hex_to_rgb(color)
 
     # Assign the material to object
+    for _ in range(len(obj.material_slots)):
+        bpy.ops.object.material_slot_remove({'object': obj})
+    obj.data.materials.clear()
     obj.active_material = material
 
 def hex_to_rgb(color):
