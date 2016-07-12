@@ -60,7 +60,7 @@ class Render():
         self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
         self.opts['sun_strength'] = 2
         self.opts['camera_distance_factor'] = [6/12, 1/12] # [mu, sigma] = factor * min_distance
-        self.opts['camera_theta'] = [np.pi/6, 0] # Maybe restrict further. Allow views from below?
+        self.opts['camera_theta'] = [np.pi/6, np.pi/2] # Maybe restrict further. Allow views from below?
         self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
         self.opts['resolution'] = [512, 512] # [x, y] pixels
         self.opts['cycles_samples'] = 64 # Increase to reduce noise
