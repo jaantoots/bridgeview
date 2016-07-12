@@ -62,3 +62,58 @@ class Parts():
         # Monochrome colors for non-bridge structures on level 1
         for feature, color in zip(features, generate(hue='monochrome', count=len(features))):
             self.levels[1][feature] = color
+
+    def color_level(self, level):
+        """Color all objects according to level"""
+        # Start with all objects black
+        _color_parts('', '#000000')
+        # Level 2: parts
+        if level == 2:
+            for part, color in self.levels[2].items():
+                _color_parts(part, color)
+        # Level 1: structures
+        elif level == 1:
+            for structure, color in self.levels[1].items():
+                # If in self.parts, object names start with labels on level 2
+                if structure in self.parts:
+                    for part in self.parts[structure]:
+                        _color_parts(part, color)
+                # Non-bridge structures/features are directly named
+                else:
+                    _color_parts(structure, color)
+        # Level 0: features
+        elif level == 0:
+            for feature, color in self.levels[0].items():
+                # Non-bridge features/structures are directly named
+                if feature != 'bridge':
+                    _color_parts(feature, color)
+                # Bridge object names start with labels on level 2
+                else:
+                    for part in self.levels[2]:
+                        _color_parts(part, self.levels[0]['bridge'])
+
+def _color_parts(part, color):
+    """Color all instances of a part, or all objects if part is ''"""
+    instances = [obj for obj in bpy.data.objects if obj.name.startswith(part)]
+    for obj in instances:
+        _color_object(obj, color)
+
+def _color_object(obj, color):
+    """Color an object with color"""
+    material_name = "{:s}.{:s}".format(obj.name, color)
+
+    # Create a shadeless diffuse material with the right color if it does not exist
+    if material_name in [material.name for material in bpy.data.materials]:
+        material = bpy.data.materials[material_name]
+    else:
+        material = bpy.data.materials.new(material_name)
+        material.use_shadeless = True
+        material.diffuse_color = hex_to_rgb(color)
+
+def hex_to_rgb(color):
+    """Convert a hex color code into rgb 3-tuple"""
+    rgb = int(color[1:], 16)
+    r = ((rgb >> 16) & 255)/255
+    g = ((rgb >> 8) & 255)/255
+    b = ((rgb >> 0) & 255)/255
+    return r, g, b
