@@ -8,9 +8,6 @@ class _LabelDict(dict):
     def __missing__(self, key):
         return []
 
-# At some point have to get rid of gamma correction:
-# bpy.data.scenes[0].display_settings.display_device = 'None'
-
 class Labels():
     """Identify parts by name and assign semantic labels as colors"""
     def __init__(self):

@@ -115,7 +115,23 @@ class Render():
         """Render the scene; should have seq < 999 to avoid non-canonical naming"""
         if not os.path.exists(path):
             os.makedirs(path)
-        bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.png".format(seq))
-        bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
 
+        # Render with Cycles engine
+        bpy.data.scenes[0]render.engine = 'CYCLES'
+#        bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
+        bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
+        bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.vis.png".format(seq))
+        bpy.ops.render.render(write_still=True)
+
+    def render_semantic(self, path, level, seq=0):
+        """Render the semantic labels; should have seq < 999 to avoid non-canonical naming"""
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        # Render with Blender engine and no anti-aliasing
+        bpy.data.scenes[0]render.engine = 'BLENDER_RENDER'
+        bpy.data.scenes[0].render.use_antialiasing = False
+        bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
+        bpy.data.scenes[0].render.filepath = os.path.join(
+            path, "{:03d}.sem.{:d}.png".format(seq, level))
         bpy.ops.render.render(write_still=True)
