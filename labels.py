@@ -11,7 +11,7 @@ class _LabelDict(dict):
 # At some point have to get rid of gamma correction:
 # bpy.data.scenes[0].display_settings.display_device = 'None'
 
-class Parts():
+class Labels():
     """Identify parts by name and assign semantic labels as colors"""
     def __init__(self):
         self.levels = []
