@@ -5,12 +5,6 @@ class Dict(dict):
     def __missing__(self, key):
         return []
 
-def apply_to_instances(func, part, objects):
-    """Apply a function to objects with a given name
-
-    Execute func(obj) where `func` takes a single object as an argument,
-    for all objects named `part` with optional suffixes separated by `.`
-
-    """
-    for obj in [obj for obj in objects if part in obj.name.split('.')]:
-        func(obj)
+def all_instances(part: str, objects):
+    """Return all objects with a given name"""
+    return [obj for obj in objects if part in obj.name.split('.')]

@@ -90,11 +90,11 @@ class Labels():
 
     def _color_parts(self, part, color):
         """Color all instances of a part, or all objects if part is ''"""
-        instances = [obj for obj in self.objects if obj.name.startswith(part)]
+        instances = helpers.all_instances(part, self.objects)
         for obj in instances:
-            _color_object(obj, color)
+            color_object(obj, color)
 
-def _color_object(obj, color):
+def color_object(obj, color):
     """Color an object with color"""
     material_name = "shadeless.{:s}".format(color)
 
