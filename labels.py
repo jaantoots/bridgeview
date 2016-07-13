@@ -2,11 +2,7 @@
 import json
 import randomcolor
 import bpy # pylint: disable=import-error
-
-class _LabelDict(dict):
-    """Overload the missing method of builtin dict for brevity"""
-    def __missing__(self, key):
-        return []
+from . import helpers
 
 class Labels():
     """Identify parts by name and assign semantic labels as colors"""
@@ -16,14 +12,14 @@ class Labels():
         self.levels += [dict()] # 0: feature -> color
         self.levels += [dict()] # 1: structure -> color
         self.levels += [dict()] # 2: part -> color
-        self.parts = _LabelDict() # structure -> parts
+        self.parts = helpers.Dict() # structure -> parts
 
     def read(self, label_file):
         """Read labelling from file"""
         with open(label_file) as file:
             data = json.load(file)
             self.levels = data['levels']
-            self.parts = _LabelDict(data['parts'])
+            self.parts = helpers.Dict(data['parts'])
 
     def write(self, label_file):
         """Write labelling to file"""
