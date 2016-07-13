@@ -117,7 +117,7 @@ class Render():
             os.makedirs(path)
 
         # Render with Cycles engine
-        bpy.data.scenes[0]render.engine = 'CYCLES'
+        bpy.data.scenes[0].render.engine = 'CYCLES'
 #        bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
         bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
         bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.vis.png".format(seq))
@@ -129,9 +129,11 @@ class Render():
             os.makedirs(path)
 
         # Render with Blender engine and no anti-aliasing
-        bpy.data.scenes[0]render.engine = 'BLENDER_RENDER'
+        bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
         bpy.data.scenes[0].render.use_antialiasing = False
         bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
         bpy.data.scenes[0].render.filepath = os.path.join(
             path, "{:03d}.sem.{:d}.png".format(seq, level))
         bpy.ops.render.render(write_still=True)
+        # Switch back to Cycles to have correct properties (for visual renders)
+        bpy.data.scenes[0].render.engine = 'CYCLES'

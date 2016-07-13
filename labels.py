@@ -10,7 +10,8 @@ class _LabelDict(dict):
 
 class Labels():
     """Identify parts by name and assign semantic labels as colors"""
-    def __init__(self):
+    def __init__(self, objects):
+        self.objects = objects
         self.levels = []
         self.levels += [dict()] # 0: feature -> color
         self.levels += [dict()] # 1: structure -> color
@@ -65,37 +66,37 @@ class Labels():
     def color_level(self, level):
         """Color all objects according to level"""
         # Start with all objects black
-        _color_parts('', '#000000')
+        self._color_parts('', '#000000')
         # Level 2: parts
         if level == 2:
             for part, color in self.levels[2].items():
-                _color_parts(part, color)
+                self._color_parts(part, color)
         # Level 1: structures
         elif level == 1:
             for structure, color in self.levels[1].items():
                 # If in self.parts, object names start with labels on level 2
                 if structure in self.parts:
                     for part in self.parts[structure]:
-                        _color_parts(part, color)
+                        self._color_parts(part, color)
                 # Non-bridge structures/features are directly named
                 else:
-                    _color_parts(structure, color)
+                    self._color_parts(structure, color)
         # Level 0: features
         elif level == 0:
             for feature, color in self.levels[0].items():
                 # Non-bridge features/structures are directly named
                 if feature != 'bridge':
-                    _color_parts(feature, color)
+                    self._color_parts(feature, color)
                 # Bridge object names start with labels on level 2
                 else:
                     for part in self.levels[2]:
-                        _color_parts(part, self.levels[0]['bridge'])
+                        self._color_parts(part, self.levels[0]['bridge'])
 
-def _color_parts(part, color):
-    """Color all instances of a part, or all objects if part is ''"""
-    instances = [obj for obj in bpy.data.objects if obj.name.startswith(part)]
-    for obj in instances:
-        _color_object(obj, color)
+    def _color_parts(self, part, color):
+        """Color all instances of a part, or all objects if part is ''"""
+        instances = [obj for obj in self.objects if obj.name.startswith(part)]
+        for obj in instances:
+            _color_object(obj, color)
 
 def _color_object(obj, color):
     """Color an object with color"""
