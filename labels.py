@@ -6,6 +6,7 @@ from . import helpers
 
 class Labels():
     """Identify parts by name and assign semantic labels as colors"""
+
     def __init__(self, objects):
         self.objects = objects
         self.levels = []
@@ -28,7 +29,15 @@ class Labels():
             json.dump(data, file)
 
     def def_structure(self, structure, parts):
-        """Define parts in a structure and color the structure and parts"""
+        """Define parts in a structure and color the structure and parts
+
+        Assign parts to be members of a structure. Every structure is
+        assigned a hue; the level 1 structure is assigned a color and
+        all level 2 parts are assigned a color, all in the same hue
+        for clarity. Should have # of structures <= 7 to avoid reusing
+        hues.
+
+        """
         index = len(self.parts) # Number of structures defined previously
         rand_color = randomcolor.RandomColor()
         hues = ['red', 'green', 'blue', 'purple', 'yellow', 'orange', 'pink']
@@ -43,12 +52,24 @@ class Labels():
             self.levels[2][part] = color
 
     def structure_from_dict(self, parts_dict):
-        """Define all structures in parts_dict"""
+        """Define all structures in parts_dict
+
+        Convenience method for defining parts in structures and having
+        them colored
+
+        """
         for structure, parts in parts_dict.items():
             self.def_structure(structure, parts)
 
     def def_features(self, features):
-        """Define non-bridge features (should be called only once)"""
+        """Define all non-bridge features
+
+        Features that are not part of the bridge have the same label
+        on level 0 and level 1. All colors are available on level 0,
+        while non-bridge features are constrained to monochrome color
+        labels on level 1.
+
+        """
         rand_color = randomcolor.RandomColor()
         self.levels[0] = {feature: rand_color.generate(luminosity='bright')[0]
                           for feature in features}
@@ -60,7 +81,13 @@ class Labels():
             self.levels[1][feature] = color
 
     def color_level(self, level):
-        """Color all objects according to level"""
+        """Color all objects according to level
+
+        Apply the colors corresponding to `level`. Using too many
+        if-branches adding an annoying amount of cyclomatic
+        complexity.
+
+        """
         # Start with all objects black
         self._color_parts('', '#000000')
         # Level 2: parts
@@ -95,7 +122,12 @@ class Labels():
             color_object(obj, color)
 
 def color_object(obj, color):
-    """Color an object with color"""
+    """Color an object with color
+
+    Find or create a material with the specified color and make this
+    the active material of the object
+
+    """
     material_name = "shadeless.{:s}".format(color)
 
     # Create a shadeless diffuse material with the right color if it does not exist

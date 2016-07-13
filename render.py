@@ -16,8 +16,14 @@ def new_camera(resolution):
     camera.data.clip_end = 2000 # Maybe set dynamically if ground plane larger
     return camera
 
+# TODO: Test BoundingSphere (returns too large spheres and bounding box is not always correct)
 class BoundingSphere():
-    """Return a sphere surrounding the objects"""
+    """Return a sphere surrounding the objects
+
+    Unfortunately this seems to return slightly weird stuff
+    occasionally
+
+    """
 
     def __init__(self, objects, centre=None):
         def minmax(index, axis):
@@ -34,7 +40,16 @@ class BoundingSphere():
         self.radius = np.max(np.linalg.norm(box - self.centre, axis=1))
 
 class Render():
-    """Configure and render the scene"""
+    """Configure and render the scene
+
+    Parameters are read from conf_file. During testing and setup one
+    can be generated with the default parameters. It is possible to
+    place the sun and the camera randomly and create the
+    renders. However, generating the sun and camera positions
+    beforehand allows doing all the visual renders first and the
+    semantic renders only afterwards (recommended).
+
+    """
 
     def __init__(self, objects, conf_file=None):
         self.objects = objects
@@ -49,6 +64,7 @@ class Render():
                 self.opts = json.load(file)
 
     def _default(self):
+        """Default configuration parameters"""
         self.opts = {}
         self.opts['sun_theta'] = [0, 17/18 * np.pi/2] # Not lower than 5 deg from horizon
         self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
@@ -94,13 +110,14 @@ class Render():
         if self.camera is None:
             self.camera = new_camera(self.opts['resolution'])
 
+        # Spherical coordinates of the camera position
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
         distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
                                     min_distance * self.opts['camera_distance_factor'][1])
         theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
         phi = np.random.uniform(0, 2*np.pi)
 
-        # Location axes rotated due to default camera position
+        # Location axes rotated due to default camera orientation
         location = self.sphere.centre + distance * np.array(
             [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
         rotation = np.array([theta, 0, np.pi + phi])
@@ -108,18 +125,18 @@ class Render():
         return location.tolist(), rotation.tolist()
 
     def place_camera(self, location=None, rotation=None):
-        """Place the camera in specified location, rotation pair"""
-        # Position and face centre
+        """Place the camera at specified location and rotation"""
         if location is None:
             location, rotation = self.random_camera()
 
+        # Position and face centre
         self.camera.location = np.zeros(3)
         self.camera.rotation_euler[:] = rotation
         self.camera.location = location
         return self.camera
 
     def render(self, path, seq=0):
-        """Render the scene; should have seq < 999 to avoid non-canonical naming"""
+        """Render the visual scene; should have seq < 999 to avoid non-canonical naming"""
         if not os.path.exists(path):
             os.makedirs(path)
 
