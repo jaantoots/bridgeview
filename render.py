@@ -5,12 +5,6 @@ import numpy as np
 import bpy # pylint: disable=import-error
 from mathutils import Vector # pylint: disable=import-error
 
-# TODO: Remove ground plane function, belongs with terrain
-def add_ground_plane():
-    """Add a large ground plane"""
-    bpy.ops.mesh.primitive_plane_add(location=(0, 0, 0), radius=1000)
-    return bpy.context.object
-
 def new_camera(resolution):
     """Add a camera to the scene and set the resolution for rendering"""
     bpy.ops.object.camera_add()
@@ -70,16 +64,23 @@ class Render():
         with open(conf_file, 'w') as file:
             json.dump(self.opts, file)
 
-    def randomise_sun(self):
-        """Delete a previous sun (if exists) and create a new one at a random angle"""
+    def random_sun(self):
+        """Generate a random rotation for the sun"""
+        theta = np.random.uniform(self.opts['sun_theta'][0], self.opts['sun_theta'][1])
+        phi = np.random.uniform(0, 2*np.pi)
+        return [theta, 0, phi]
+
+    def place_sun(self, rotation=None):
+        """Delete a previous sun (if exists) and create a new one at specified angle"""
         bpy.ops.object.select_all(action='DESELECT')
         if self.sun is not None:
             self.sun.select = True
             bpy.ops.object.delete()
 
-        theta = np.random.uniform(self.opts['sun_theta'][0], self.opts['sun_theta'][1])
+        if rotation is None:
+            rotation = self.random_sun()
         bpy.ops.object.lamp_add(type='SUN', location=(0, 0, 20),
-                                rotation=(theta, 0, np.random.uniform(0, 2*np.pi)))
+                                rotation=rotation)
         self.sun = bpy.context.object
 
         # Set size and strength
@@ -88,12 +89,11 @@ class Render():
             = self.opts['sun_strength']
         return self.sun
 
-    def randomise_camera(self):
-        """Randomise the camera position with the objects in view"""
+    def random_camera(self):
+        """Generate a random camera position with the objects in view"""
         if self.camera is None:
             self.camera = new_camera(self.opts['resolution'])
 
-        # Position and face centre
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
         distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
                                     min_distance * self.opts['camera_distance_factor'][1])
@@ -105,6 +105,13 @@ class Render():
             [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
+        return location.tolist(), rotation.tolist()
+
+    def place_camera(self, location=None, rotation=None):
+        """Place the camera in specified location, rotation pair"""
+        # Position and face centre
+        if location is None:
+            location, rotation = self.random_camera()
 
         self.camera.location = np.zeros(3)
         self.camera.rotation_euler[:] = rotation
