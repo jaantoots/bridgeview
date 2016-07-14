@@ -46,7 +46,7 @@ def point():
     return {'sun_rotation': sun_rotation,
             'camera_location': camera_location, 'camera_rotation': camera_rotation}
 
-data = {i: point() for i in range(4)}
+data = {"{:03d}".format(i): point() for i in range(4)}
 
 for seq, point in data.items():
     render.place_sun(point['sun_rotation'])
