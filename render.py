@@ -69,10 +69,12 @@ class Render():
         self.opts['sun_theta'] = [0, 17/18 * np.pi/2] # Not lower than 5 deg from horizon
         self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
         self.opts['sun_strength'] = 2
+        self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0] # High noon sun color
         self.opts['camera_distance_factor'] = [6/12, 1/12] # [mu, sigma] = factor * min_distance
         self.opts['camera_theta'] = [np.pi/6, np.pi/2] # Maybe restrict further. Views from below?
         self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
         self.opts['resolution'] = [512, 512] # [x, y] pixels
+        self.opts['film_exposure'] = 2 # Balances with sun strength and sky
         self.opts['cycles_samples'] = 64 # Increase to reduce noise
 
     def write_conf(self, conf_file):
@@ -103,6 +105,8 @@ class Render():
         self.sun.data.shadow_soft_size = self.opts['sun_size']
         self.sun.data.node_tree.nodes['Emission'].inputs['Strength'].default_value \
             = self.opts['sun_strength']
+        self.sun.data.node_tree.nodes['Emission'].inputs['Color'].default_value \
+            = self.opts['sun_color']
         return self.sun
 
     def random_camera(self):
@@ -142,7 +146,7 @@ class Render():
 
         # Render with Cycles engine
         bpy.data.scenes[0].render.engine = 'CYCLES'
-#        bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
+        bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
         bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
         bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.vis.png".format(seq))
         bpy.ops.render.render(write_still=True)
