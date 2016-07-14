@@ -6,5 +6,8 @@ class Dict(dict):
         return []
 
 def all_instances(part: str, objects):
-    """Return all objects with a given name"""
-    return [obj for obj in objects if part in obj.name.split('.')]
+    """Return all objects with a given name or all if part is None"""
+    if part is None:
+        return objects
+    else:
+        return [obj for obj in objects if part in obj.name.split('.')]

@@ -5,7 +5,7 @@ import numpy as np
 import bpy # pylint: disable=import-error
 from mathutils import Vector # pylint: disable=import-error
 
-def new_camera(resolution):
+def new_camera(resolution: list):
     """Add a camera to the scene and set the resolution for rendering"""
     bpy.ops.object.camera_add()
     camera = bpy.context.object
@@ -25,7 +25,7 @@ class BoundingSphere():
 
     """
 
-    def __init__(self, objects, centre=None):
+    def __init__(self, objects: list, centre=None):
         def minmax(index, axis):
             """Choose min or max depending on axis at bounding box corner index"""
             is_max = (index >> axis) % 2 # Control bit in index corresponding to axis
@@ -51,7 +51,7 @@ class Render():
 
     """
 
-    def __init__(self, objects, conf_file=None):
+    def __init__(self, objects: list, conf_file=None):
         self.objects = objects
         self.sphere = BoundingSphere(self.objects)
         self.sun = None
@@ -77,7 +77,7 @@ class Render():
         self.opts['film_exposure'] = 2 # Balances with sun strength and sky
         self.opts['cycles_samples'] = 64 # Increase to reduce noise
 
-    def write_conf(self, conf_file):
+    def write_conf(self, conf_file: str):
         """Write current configuration to conf_file"""
         with open(conf_file, 'w') as file:
             json.dump(self.opts, file)
@@ -139,8 +139,8 @@ class Render():
         self.camera.location = location
         return self.camera
 
-    def render(self, path, seq=0):
-        """Render the visual scene; should have seq < 999 to avoid non-canonical naming"""
+    def render(self, path: str, seq: str='test'):
+        """Render the visual scene"""
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -148,11 +148,11 @@ class Render():
         bpy.data.scenes[0].render.engine = 'CYCLES'
         bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
         bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
-        bpy.data.scenes[0].render.filepath = os.path.join(path, "{:03d}.vis.png".format(seq))
+        bpy.data.scenes[0].render.filepath = os.path.join(path, "{:s}.vis.png".format(seq))
         bpy.ops.render.render(write_still=True)
 
-    def render_semantic(self, level, path, seq=0):
-        """Render the semantic labels; should have seq < 999 to avoid non-canonical naming"""
+    def render_semantic(self, level: int, path: str, seq: str='test'):
+        """Render the semantic labels"""
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -161,7 +161,7 @@ class Render():
         bpy.data.scenes[0].render.use_antialiasing = False
         bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
         bpy.data.scenes[0].render.filepath = os.path.join(
-            path, "{:03d}.sem.{:d}.png".format(seq, level))
+            path, "{:s}.sem.{:d}.png".format(seq, level))
         bpy.ops.render.render(write_still=True)
         # Switch back to Cycles to have correct properties (for visual renders)
         bpy.data.scenes[0].render.engine = 'CYCLES'

@@ -23,14 +23,14 @@ class Textures():
         self.textures = helpers.Dict()
         self.groups = helpers.Dict()
 
-    def read(self, texture_file):
+    def read(self, texture_file: str):
         """Read texturing from file"""
         with open(texture_file) as file:
             data = json.load(file)
             self.textures = helpers.Dict(data['textures'])
             self.groups = helpers.Dict(data['groups'])
 
-    def write(self, texture_file):
+    def write(self, texture_file: str):
         """Write texturing to file"""
         with open(texture_file, 'w') as file:
             data = {'textures': self.textures, 'groups': self.groups}
