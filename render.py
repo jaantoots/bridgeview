@@ -52,20 +52,24 @@ class Render():
     """
 
     def __init__(self, objects: list, conf_file=None):
-        self.objects = objects
-        self.sphere = BoundingSphere(self.objects)
-        self.sun = None
-        self.camera = None
-
+        # Load configuration
         if conf_file is None:
             self._default()
         else:
             with open(conf_file) as file:
                 self.opts = json.load(file)
+        # Initialise objects
+        self.objects = objects
+        for obj_name in self.opts['landscape']:
+            self.objects.remove(bpy.data.objects[obj_name])
+        self.sphere = BoundingSphere(self.objects)
+        self.sun = None
+        self.camera = new_camera(self.opts['resolution'])
 
     def _default(self):
         """Default configuration parameters"""
         self.opts = {}
+        self.opts['landscape'] = ["Landscape"] # Parts not part of the bridge
         self.opts['sun_theta'] = [0, 17/18 * np.pi/2] # Not lower than 5 deg from horizon
         self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
         self.opts['sun_strength'] = 2
@@ -111,8 +115,6 @@ class Render():
 
     def random_camera(self):
         """Generate a random camera position with the objects in view"""
-        if self.camera is None:
-            self.camera = new_camera(self.opts['resolution'])
 
         # Spherical coordinates of the camera position
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
@@ -159,7 +161,6 @@ class Render():
         # Render with Blender engine and no anti-aliasing
         bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
         bpy.data.scenes[0].render.use_antialiasing = False
-        bpy.data.scenes[0].display_settings.display_device = 'None' # Avoid gamma correction
         bpy.data.scenes[0].render.filepath = os.path.join(
             path, "{:s}.sem.{:d}.png".format(seq, level))
         bpy.ops.render.render(write_still=True)

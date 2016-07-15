@@ -88,6 +88,10 @@ class Labels():
         complexity.
 
         """
+        # Switch off color management
+        bpy.context.scene.display_settings.display_device = 'None'
+        bpy.context.scene.sequencer_colorspace_settings.name = 'Raw'
+
         # Start with all objects black
         self._color_parts(None, '#000000')
         # Level 2: parts
