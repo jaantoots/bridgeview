@@ -1,3 +1,9 @@
+# Using this directory for generated images
+data/
+
+# Blender previous save
+*.blend1
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

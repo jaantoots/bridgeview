@@ -1,9 +1,7 @@
-"""Generate the data
+"""Run Blender in background mode with model and this script to
+generate the data.
 
-This should be called as a Blender script:
-
-blender MODEL --background --factory-startup --python generate.py -- \
-[OPTIONS]
+For help: blender --background --python generate.py -- --help
 
 """
 import sys
@@ -81,6 +79,7 @@ class Generate():
 
 def main():
     """Parse the arguments and generate data"""
+    print("\n==> {:s}".format(__file__))
     # Get all arguments after '--'
     try:
         argv = sys.argv[sys.argv.index('--') + 1:]
@@ -88,10 +87,13 @@ def main():
         argv = []
 
     # Parse arguments
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog_text = "blender MODEL --background --factory-startup --python {:s} --".format(__file__)
+    parser = argparse.ArgumentParser(prog=prog_text,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=__doc__, epilog="===")
     parser.add_argument("-n", "--name", type=str, help="Name of the generation run (optional)")
     parser.add_argument("-c", "--conf", metavar="FILE", default="conf.json",
-                        help="Configuration file")
+                        help="Configuration file (default: conf.json)")
     parser.add_argument("-s", "--size", metavar="N", type=int, default=4,
                         help="Number of images to generate")
     args = parser.parse_args(argv)
@@ -106,13 +108,14 @@ def main():
 
     # Copy files into path
     with open(args.conf) as file:
-        files = json.load(args.conf)
+        files = json.load(file)
     os.makedirs(path)
-    for file in files:
+    for file in files.values():
         shutil.copy(file, path)
 
     gen = Generate(path, files)
     gen.run(args.size)
+    print()
 
 if __name__ == "__main__":
     main()
