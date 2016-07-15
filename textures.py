@@ -19,7 +19,7 @@ class Textures():
     """
 
     def __init__(self, objects: list):
-        self.objects = objects
+        self.objects = objects[:]
         self.textures = helpers.Dict()
         self.groups = helpers.Dict()
 

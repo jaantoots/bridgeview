@@ -59,7 +59,7 @@ class Render():
             with open(conf_file) as file:
                 self.opts = json.load(file)
         # Initialise objects
-        self.objects = objects
+        self.objects = objects[:]
         for obj_name in self.opts['landscape']:
             self.objects.remove(bpy.data.objects[obj_name])
         self.sphere = BoundingSphere(self.objects)

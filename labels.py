@@ -8,7 +8,7 @@ class Labels():
     """Identify parts by name and assign semantic labels as colors"""
 
     def __init__(self, objects: list):
-        self.objects = objects
+        self.objects = objects[:]
         self.levels = []
         self.levels += [dict()] # 0: feature -> color
         self.levels += [dict()] # 1: structure -> color
