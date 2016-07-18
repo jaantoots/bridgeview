@@ -1,5 +1,4 @@
 """Provides methods for rendering the labelled model"""
-import os
 import json
 import numpy as np
 import bpy # pylint: disable=import-error
@@ -141,28 +140,21 @@ class Render():
         self.camera.location = location
         return self.camera
 
-    def render(self, path: str, seq: str='test'):
+    def render(self, path: str):
         """Render the visual scene"""
-        if not os.path.exists(path):
-            os.makedirs(path)
-
         # Render with Cycles engine
         bpy.data.scenes[0].render.engine = 'CYCLES'
         bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
         bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
-        bpy.data.scenes[0].render.filepath = os.path.join(path, "{:s}.vis.png".format(seq))
+        bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)
 
-    def render_semantic(self, level: int, path: str, seq: str='test'):
+    def render_semantic(self, path: str):
         """Render the semantic labels"""
-        if not os.path.exists(path):
-            os.makedirs(path)
-
         # Render with Blender engine and no anti-aliasing
         bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
         bpy.data.scenes[0].render.use_antialiasing = False
-        bpy.data.scenes[0].render.filepath = os.path.join(
-            path, "{:s}.sem.{:d}.png".format(seq, level))
+        bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)
         # Switch back to Cycles to have correct properties (for visual renders)
         bpy.data.scenes[0].render.engine = 'CYCLES'
