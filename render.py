@@ -73,8 +73,9 @@ class Render():
         self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
         self.opts['sun_strength'] = 2
         self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0] # High noon sun color
-        self.opts['camera_distance_factor'] = [6/12, 1/12] # [mu, sigma] = factor * min_distance
-        self.opts['camera_theta'] = [np.pi/6, np.pi/2] # Maybe restrict further. Views from below?
+        self.opts['camera_distance_factor'] = [4/12, 1/12] # [mu, sigma] = factor * min_distance
+        self.opts['camera_lens'] = [16, 1/4] # Median focal length in millimetres and var parameter
+        self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2] # Not too high but above ground
         self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
         self.opts['resolution'] = [512, 512] # [x, y] pixels
         self.opts['film_exposure'] = 2 # Balances with sun strength and sky
@@ -115,6 +116,11 @@ class Render():
     def random_camera(self):
         """Generate a random camera position with the objects in view"""
 
+        # Random focal length (approx median, relative sigma)
+        focal_length = self.opts['camera_lens'][0] * np.exp(
+            np.random.normal(0, self.opts['camera_lens'][1]))
+        self.camera.data.lens = focal_length
+
         # Spherical coordinates of the camera position
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
         distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
@@ -127,14 +133,15 @@ class Render():
             [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
-        return location.tolist(), rotation.tolist()
+        return focal_length, location.tolist(), rotation.tolist()
 
-    def place_camera(self, location=None, rotation=None):
+    def place_camera(self, focal_length=None, location=None, rotation=None):
         """Place the camera at specified location and rotation"""
-        if location is None:
-            location, rotation = self.random_camera()
+        if focal_length is None:
+            focal_length, location, rotation = self.random_camera()
 
         # Position and face centre
+        self.camera.data.lens = focal_length
         self.camera.location = np.zeros(3)
         self.camera.rotation_euler[:] = rotation
         self.camera.location = location
