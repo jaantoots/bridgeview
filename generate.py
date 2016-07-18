@@ -23,6 +23,7 @@ class Generate():
     """
 
     def __init__(self, path: str, files: dict):
+        clean_scene()
         self.objects = bpy.data.objects[:]
         self.path = path
         self.files = files
@@ -94,6 +95,13 @@ class Generate():
                 self.render.place_camera(
                     point['camera_lens'], point['camera_location'], point['camera_rotation'])
                 self.render.render_semantic(path)
+
+def clean_scene():
+    """Clear all cameras and lamps (suns) from the model"""
+    for obj in [obj for obj in bpy.data.objects if obj.type == 'CAMERA' or obj.type == 'LAMP']:
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select = True
+        bpy.ops.object.delete(use_global=False)
 
 def main():
     """Parse the arguments and generate data"""
