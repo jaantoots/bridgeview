@@ -161,6 +161,7 @@ class Render():
         # Render with Blender engine and no anti-aliasing
         bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
         bpy.data.scenes[0].render.use_antialiasing = False
+        bpy.data.scenes[0].world.horizon_color = (0, 0, 0)
         bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)
         # Switch back to Cycles to have correct properties (for visual renders)
