@@ -51,8 +51,8 @@ class Generate():
     def point(self):
         """Return a random sun and camera setup"""
         sun_rotation = self.render.random_sun()
-        camera_location, camera_rotation = self.render.random_camera()
-        return {'sun_rotation': sun_rotation,
+        camera_lens, camera_location, camera_rotation = self.render.random_camera()
+        return {'sun_rotation': sun_rotation, 'camera_lens': camera_lens,
                 'camera_location': camera_location, 'camera_rotation': camera_rotation}
 
     def run(self, size: int=1):
@@ -79,7 +79,8 @@ class Generate():
             if os.path.isfile(path):
                 continue
             self.render.place_sun(point['sun_rotation'])
-            self.render.place_camera(point['camera_location'], point['camera_rotation'])
+            self.render.place_camera(
+                point['camera_lens'], point['camera_location'], point['camera_rotation'])
             self.textures.texture() # Texture randomly if more than one texture provided for group
             self.render.render(path)
 
@@ -90,7 +91,8 @@ class Generate():
                 path = os.path.join(self.path, "{:s}.sem.{:d}.png".format(seq, level))
                 if os.path.isfile(path):
                     continue
-                self.render.place_camera(point['camera_location'], point['camera_rotation'])
+                self.render.place_camera(
+                    point['camera_lens'], point['camera_location'], point['camera_rotation'])
                 self.render.render_semantic(path)
 
 def main():
