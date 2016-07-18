@@ -56,26 +56,42 @@ class Generate():
                 'camera_location': camera_location, 'camera_rotation': camera_rotation}
 
     def run(self, size: int=1):
-        """Generate the data, `size` sets of visual images and labels"""
-        # Get the points and write them to the output file
-        data = {"{:03d}".format(i): self.point() for i in range(size)}
+        """Generate the data, `size` sets of visual images and labels
+
+        If data output file already exists, only create missing images
+        (`size` is ignored). Otherwise, generate points to file and
+        create images.
+
+        """
+        # Check if output file is not empty, load points from file, or generate points
         out_path = os.path.join(self.path, self.files['out'])
-        with open(out_path, 'w') as file:
-            json.dump(data, file)
+        if os.path.getsize(out_path):
+            with open(out_path) as file:
+                data = json.load(file)
+        else:
+            data = {"{:03d}".format(i): self.point() for i in range(size)}
+            with open(out_path, 'w') as file:
+                json.dump(data, file)
 
         # Render the visual images
         for seq, point in data.items():
+            path = os.path.join(self.path, "{:s}.vis.png".format(seq))
+            if os.path.isfile(path):
+                continue
             self.render.place_sun(point['sun_rotation'])
             self.render.place_camera(point['camera_location'], point['camera_rotation'])
             self.textures.texture() # Texture randomly if more than one texture provided for group
-            self.render.render(self.path, seq)
+            self.render.render(path)
 
         # Render semantic labels
         for level in range(3):
             self.labels.color_level(level) # Only change materials once per level for efficiency
             for seq, point in data.items():
+                path = os.path.join(self.path, "{:s}.sem.{:d}.png".format(seq, level))
+                if os.path.isfile(path):
+                    continue
                 self.render.place_camera(point['camera_location'], point['camera_rotation'])
-                self.render.render_semantic(level, self.path, seq)
+                self.render.render_semantic(path)
 
 def main():
     """Parse the arguments and generate data"""
@@ -109,9 +125,10 @@ def main():
     # Copy files into path
     with open(args.conf) as file:
         files = json.load(file)
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     for file in files.values():
-        shutil.copy(file, path)
+        if not os.path.isfile(os.path.join(path, file)):
+            shutil.copy(file, path)
 
     gen = Generate(path, files)
     gen.run(args.size)
