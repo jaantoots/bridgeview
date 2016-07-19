@@ -1,5 +1,7 @@
 """Provides methods for rendering the labelled model"""
 import json
+import os
+import hashlib
 import numpy as np
 import bpy # pylint: disable=import-error
 import mathutils # pylint: disable=import-error
@@ -187,3 +189,34 @@ class Render():
         bpy.ops.render.render(write_still=True)
         # Switch back to Cycles to have correct properties (for visual renders)
         bpy.data.scenes[0].render.engine = 'CYCLES'
+
+    def render_depth(self, path: str):
+        """Render depth"""
+        # Use Compositing nodes for Scene
+        bpy.data.scenes[0].use_nodes = True
+        tree = bpy.data.scenes[0].node_tree
+
+        # Configure File Output node
+        if tree.nodes.get('File Output') is None:
+            file_output = tree.nodes.new('CompositorNodeOutputFile')
+        else:
+            file_output = tree.nodes['File Output']
+        file_output.format.file_format = 'OPEN_EXR'
+        file_output.base_path = os.path.dirname(path)
+
+        # Generate random collisionless filename
+        sha = hashlib.sha1()
+        sha.update(self.camera.location) # Different for every image
+        digest = sha.hexdigest()
+        file_output.file_slots['Image'].path = digest
+
+        # Connect depth rendering to outputs
+        tree.links.clear()
+        tree.links.new(tree.nodes['Render Layers'].outputs['Z'],
+                       tree.nodes['Composite'].inputs['Image'])
+        tree.links.new(tree.nodes['Render Layers'].outputs['Z'],
+                       file_output.inputs['Image'])
+
+        # Write the render and rename
+        bpy.ops.render.render(write_still=True)
+        os.rename(os.path.join(os.path.dirname(path), digest), path)
