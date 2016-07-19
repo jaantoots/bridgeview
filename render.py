@@ -2,7 +2,7 @@
 import json
 import numpy as np
 import bpy # pylint: disable=import-error
-from mathutils import Vector # pylint: disable=import-error
+import mathutils # pylint: disable=import-error
 from . import helpers
 
 def new_camera(resolution: list):
@@ -15,6 +15,14 @@ def new_camera(resolution: list):
     bpy.data.scenes[0].render.resolution_percentage = 100
     camera.data.clip_end = 2000 # Maybe set dynamically if ground plane larger
     return camera
+
+def landscape_tree(landscape):
+    """Return a balanced tree of landscape vertices for find operations"""
+    tree = mathutils.kdtree.KDTree(len(landscape.data.vertices))
+    for i, vertex in enumerate(landscape.data.vertices):
+        tree.insert(landscape.matrix_world * vertex.co, i)
+    tree.balance()
+    return tree
 
 # TODO: Test BoundingSphere (returns too large spheres and bounding box is not always correct)
 class BoundingSphere():
@@ -34,7 +42,7 @@ class BoundingSphere():
             return max if is_max else min
 
         # For every corner i of bounding box, for axis j, choose min/max of all objects along axis
-        box = np.array([[minmax(i, j)([(x.matrix_world * Vector(x.bound_box[i]))[j]
+        box = np.array([[minmax(i, j)([(x.matrix_world * mathutils.Vector(x.bound_box[i]))[j]
                                        for x in objects]) for j in range(3)] for i in range(8)])
         self.centre = np.sum(box, axis=0)/8 if centre is None else centre
         self.radius = np.max(np.linalg.norm(box - self.centre, axis=1))
@@ -58,11 +66,17 @@ class Render():
         else:
             with open(conf_file) as file:
                 self.opts = json.load(file)
+
         # Initialise objects
         self.objects = objects[:]
+        self.landscape = helpers.all_instances(self.opts['landscape'][0], self.objects)[0]
+        self.landscape_tree = landscape_tree(self.landscape)
+
+        # Remove landscape
         for obj_name in self.opts['landscape']:
             for obj in helpers.all_instances(obj_name, self.objects):
                 self.objects.remove(obj)
+
         self.sphere = BoundingSphere(self.objects)
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
@@ -123,6 +137,7 @@ class Render():
             np.random.normal(0, self.opts['camera_lens'][1]))
         self.camera.data.lens = focal_length
 
+        # TODO: Check if camera above landscape
         # Spherical coordinates of the camera position
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
         distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
