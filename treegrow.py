@@ -1,4 +1,6 @@
 """Place trees randomly across scene"""
+import sys
+import argparse
 import numpy as np
 import scipy.optimize
 import bpy # pylint: disable=import-error
@@ -83,8 +85,44 @@ class TreeGrow():
 
 def main():
     """Grow trees in model where a seed tree has already been placed"""
-    # TODO: parse command line arguments (seed trees) and run TreeGrow
-    pass
+    print("\n==> {:s}".format(__file__))
+    # Get all arguments after '--'
+    try:
+        argv = sys.argv[sys.argv.index('--') + 1:]
+    except ValueError:
+        argv = []
+
+    # Parse arguments
+    prog_text = "blender MODEL --python {:s} --".format(__file__)
+    parser = argparse.ArgumentParser(prog=prog_text,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=__doc__, epilog="===")
+    parser.add_argument("-n", "--number", metavar="N", type=int, default=32,
+                        help="Number of trees to grow")
+    parser.add_argument("-t", "--trees", metavar="TREE", type=str, nargs='*',
+                        help="Names of the seed trees")
+    parser.add_argument("-l", "--landscape", metavar="NAME", type=str, default="Landscape",
+                        help="Name of landscape object in model (default: 'Landscape')")
+    parser.add_argument("-s", "--scale", metavar="DIST", type=float, default=8.,
+                        help="Scale of intertree distance (default: 8.0)")
+    parser.add_argument("-c", "--clearance", metavar="DIST", type=float, default=8.,
+                        help="Clearance between trees (default: 8.0)")
+    args = parser.parse_args(argv)
+
+    # Grow the trees
+    grow = TreeGrow(bpy.data.objects[args.landscape], set(args.trees), args.scale, args.clearance)
+    numbers = segment(args.number, len(args.trees))
+    for tree, number in zip(args.trees, numbers):
+        grow.grow_trees(number, [bpy.data.objects[tree]])
+
+def segment(number: int, pieces: int, res: list=None):
+    """Segment a number into pieces with equal probabilities (binomial distribution)"""
+    if res is None:
+        res = []
+    if pieces == 0:
+        return res
+    piece = np.random.binomial(number, 1/pieces)
+    return segment(number - piece, pieces - 1, res + [piece])
 
 if __name__ == "__main__":
     main()
