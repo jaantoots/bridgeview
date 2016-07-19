@@ -2,6 +2,7 @@
 import json
 import os
 import hashlib
+import glob
 import numpy as np
 import bpy # pylint: disable=import-error
 import mathutils # pylint: disable=import-error
@@ -208,7 +209,7 @@ class Render():
         sha = hashlib.sha1()
         sha.update(np.array(self.camera.location)) # Different for every image
         digest = sha.hexdigest()
-        file_output.file_slots['Image'].path = digest
+        file_output.file_slots['Image'].path = digest + '_'
 
         # Connect depth rendering to outputs
         tree.links.clear()
@@ -219,4 +220,4 @@ class Render():
 
         # Write the render and rename
         bpy.ops.render.render(write_still=True)
-        os.rename(os.path.join(os.path.dirname(path), digest), path)
+        os.rename(glob.glob(os.path.join(os.path.dirname(path), digest + '*'))[0], path)
