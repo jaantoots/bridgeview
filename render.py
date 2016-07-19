@@ -137,17 +137,21 @@ class Render():
             np.random.normal(0, self.opts['camera_lens'][1]))
         self.camera.data.lens = focal_length
 
-        # TODO: Check if camera above landscape
         # Spherical coordinates of the camera position
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
-        distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
-                                    min_distance * self.opts['camera_distance_factor'][1])
-        theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
-        phi = np.random.uniform(0, 2*np.pi)
+        while True:
+            distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
+                                        min_distance * self.opts['camera_distance_factor'][1])
+            theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
+            phi = np.random.uniform(0, 2*np.pi)
+            # Location axes rotated due to default camera orientation
+            location = self.sphere.centre + distance * np.array(
+                [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
+            # Check if above landscape
+            closest_vertex = self.landscape_tree.find(location)
+            if location[2] > closest_vertex[2]:
+                break
 
-        # Location axes rotated due to default camera orientation
-        location = self.sphere.centre + distance * np.array(
-            [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
         return focal_length, location.tolist(), rotation.tolist()
