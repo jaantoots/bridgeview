@@ -206,7 +206,7 @@ class Render():
 
         # Generate random collisionless filename
         sha = hashlib.sha1()
-        sha.update(self.camera.location) # Different for every image
+        sha.update(np.array(self.camera.location)) # Different for every image
         digest = sha.hexdigest()
         file_output.file_slots['Image'].path = digest
 
