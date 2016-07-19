@@ -209,14 +209,14 @@ class Render():
         sha = hashlib.sha1()
         sha.update(np.array(self.camera.location)) # Different for every image
         digest = sha.hexdigest()
-        file_output.file_slots['Image'].path = digest + '_'
+        file_output.file_slots[0].path = digest + '_'
 
         # Connect depth rendering to outputs
         tree.links.clear()
         tree.links.new(tree.nodes['Render Layers'].outputs['Z'],
                        tree.nodes['Composite'].inputs['Image'])
         tree.links.new(tree.nodes['Render Layers'].outputs['Z'],
-                       file_output.inputs['Image'])
+                       file_output.inputs[0])
 
         # Write the render and rename
         bpy.ops.render.render(write_still=True)
