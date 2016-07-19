@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import scipy.optimize
 import bpy # pylint: disable=import-error
-import mathutils # pylint: disable=import-error
+import bridge.render
 
 class TreeGrow():
     """Grow trees on landscape with a specified group scale and hard clearance"""
@@ -16,10 +16,7 @@ class TreeGrow():
         self.trees = [obj for obj in bpy.data.objects if obj.name.split('.')[0] in other_trees]
 
         # Create landscape tree for fast closest point lookup
-        self.landscape_tree = mathutils.kdtree.KDTree(len(landscape.data.vertices))
-        for i, vertex in enumerate(landscape.data.vertices):
-            self.landscape_tree.insert(landscape.matrix_world * vertex.co, i)
-        self.landscape_tree.balance()
+        self.landscape_tree = bridge.render.landscape_tree(landscape)
 
         # Set some default values
         self._dig = [0., 0.000001]
