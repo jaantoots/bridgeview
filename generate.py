@@ -130,7 +130,7 @@ def main():
     parser.add_argument("-c", "--conf", metavar="FILE", default="conf.json",
                         help="Configuration file (default: conf.json)")
     parser.add_argument("-s", "--size", metavar="N", type=int, default=4,
-                        help="Number of images to generate")
+                        help="Number of images to generate (default: 4)")
     args = parser.parse_args(argv)
 
     # Paths
