@@ -96,6 +96,15 @@ class Generate():
                     point['camera_lens'], point['camera_location'], point['camera_rotation'])
                 self.render.render_semantic(path)
 
+        # Render depth
+        for seq, point in data.items():
+            path = os.path.join(self.path, "{:s}.dep.exr".format(seq))
+            if os.path.isfile(path):
+                continue
+            self.render.place_camera(
+                point['camera_lens'], point['camera_location'], point['camera_rotation'])
+            self.render.render_depth(path)
+
 def clean_scene():
     """Clear all cameras and lamps (suns) from the model"""
     for obj in [obj for obj in bpy.data.objects if obj.type == 'CAMERA' or obj.type == 'LAMP']:
