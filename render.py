@@ -3,6 +3,7 @@ import json
 import numpy as np
 import bpy # pylint: disable=import-error
 from mathutils import Vector # pylint: disable=import-error
+from . import helpers
 
 def new_camera(resolution: list):
     """Add a camera to the scene and set the resolution for rendering"""
@@ -60,7 +61,8 @@ class Render():
         # Initialise objects
         self.objects = objects[:]
         for obj_name in self.opts['landscape']:
-            self.objects.remove(bpy.data.objects[obj_name])
+            for obj in helpers.all_instances(obj_name, self.objects):
+                self.objects.remove(obj)
         self.sphere = BoundingSphere(self.objects)
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
