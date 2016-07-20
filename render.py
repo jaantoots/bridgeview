@@ -19,6 +19,14 @@ def new_camera(resolution: list):
     camera.data.clip_end = 2000 # Maybe set dynamically if ground plane larger
     return camera
 
+def set_sky_sun_direction(sun):
+    """Set sun direction in Sky Texture to be consistent with the rotation of sun"""
+    # Set sun direction in sky (angles seem to be correct from testing)
+    theta = sun.rotation_euler[0]
+    phi = sun.rotation_euler[2]
+    bpy.data.worlds['World'].node_tree.nodes['Sky Texture'].sun_direction \
+        = [np.sin(theta)*np.sin(phi), -np.sin(theta)*np.cos(phi), np.cos(theta)]
+
 def landscape_tree(landscape):
     """Return a balanced tree of landscape vertices for find operations"""
     tree = mathutils.kdtree.KDTree(len(landscape.data.vertices))
@@ -124,12 +132,13 @@ class Render():
                                 rotation=rotation)
         self.sun = bpy.context.object
 
-        # Set size and strength
+        # Set size, strength and sky
         self.sun.data.shadow_soft_size = self.opts['sun_size']
         self.sun.data.node_tree.nodes['Emission'].inputs['Strength'].default_value \
             = self.opts['sun_strength']
         self.sun.data.node_tree.nodes['Emission'].inputs['Color'].default_value \
             = self.opts['sun_color']
+        set_sky_sun_direction(self.sun)
         return self.sun
 
     def random_camera(self):
