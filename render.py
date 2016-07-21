@@ -19,14 +19,6 @@ def new_camera(resolution: list):
     camera.data.clip_end = 2000 # Maybe set dynamically if ground plane larger
     return camera
 
-def set_sky_sun_direction(sun):
-    """Set sun direction in Sky Texture to be consistent with the rotation of sun"""
-    # Set sun direction in sky (angles seem to be correct from testing)
-    theta = sun.rotation_euler[0]
-    phi = sun.rotation_euler[2]
-    bpy.data.worlds['World'].node_tree.nodes['Sky Texture'].sun_direction \
-        = [np.sin(theta)*np.sin(phi), -np.sin(theta)*np.cos(phi), np.cos(theta)]
-
 def landscape_tree(landscape):
     """Return a balanced tree of landscape vertices for find operations"""
     tree = mathutils.kdtree.KDTree(len(landscape.data.vertices))
@@ -101,12 +93,13 @@ class Render():
         self.opts['sun_strength'] = 2
         self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0] # High noon sun color
         self.opts['camera_distance_factor'] = [4/12, 1/12] # [mu, sigma] = factor * min_distance
-        self.opts['camera_lens'] = [16, 1/4] # Median focal length in millimetres and var parameter
+        self.opts['camera_lens'] = [16, 1/4] # Mean focal length and sigma (almost 0 factor 2 away)
         self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2] # Not too high but above ground
         self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
         self.opts['resolution'] = [512, 512] # [x, y] pixels
         self.opts['film_exposure'] = 2 # Balances with sun strength and sky
         self.opts['cycles_samples'] = 64 # Increase to reduce noise
+        self.opts['sky'] = {} # Several possibilities here, see set_sky(
 
     def write_conf(self, conf_file: str):
         """Write current configuration to conf_file"""
@@ -138,15 +131,15 @@ class Render():
             = self.opts['sun_strength']
         self.sun.data.node_tree.nodes['Emission'].inputs['Color'].default_value \
             = self.opts['sun_color']
-        set_sky_sun_direction(self.sun)
+        self.set_sky() # Set sun direction and random clouds
         return self.sun
 
     def random_camera(self):
         """Generate a random camera position with the objects in view"""
 
         # Random focal length (approx median, relative sigma)
-        focal_length = self.opts['camera_lens'][0] * np.exp(
-            np.random.normal(0, self.opts['camera_lens'][1]))
+        focal_length = np.random.lognormal(np.log(self.opts['camera_lens'][0]),
+                                           self.opts['camera_lens'][1])
         self.camera.data.lens = focal_length
 
         # Spherical coordinates of the camera position
@@ -230,3 +223,30 @@ class Render():
         # Write the render and rename
         bpy.ops.render.render(write_still=True)
         os.rename(glob.glob(os.path.join(os.path.dirname(path), digest + '*'))[0], path)
+
+    def set_sky(self):
+        """Set sun direction consistent with the rotation of sun and randomise clouds"""
+        # Initialise node tree
+        tree = bpy.data.worlds['World'].node_tree
+
+        # Set sun direction in sky (angles seem to be correct from testing)
+        theta = self.sun.rotation_euler[0]
+        phi = self.sun.rotation_euler[2]
+        tree.nodes['Sky Texture'].sun_direction = [np.sin(theta)*np.sin(phi),
+                                                   -np.sin(theta)*np.cos(phi),
+                                                   np.cos(theta)]
+
+        # Randomise clouds
+        sky = self.opts['sky']
+        if 'noise_scale' in sky:
+            tree.nodes['Noise Texture'].inputs['Scale'].default_value \
+                = np.random.lognormal(np.log(sky['noise_scale']['mean']),
+                                      sky['noise_scale']['sigma'])
+        if 'cloud_ramp' in sky:
+            ramp = tree.nodes['ColorRamp'].color_ramp
+            ramp.elements[0].position = np.random.uniform(sky['cloud_ramp']['min'],
+                                                          sky['cloud_ramp']['max'])
+            ramp.elements[1].position = ramp.elements[0].position + sky['cloud_ramp']['diff']
+        if 'translate' in sky:
+            tree.nodes['Mapping'].translation[0] = np.random.uniform(sky['translate']['low'],
+                                                                     sky['translate']['high'])
