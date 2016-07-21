@@ -1,5 +1,5 @@
-# Using this directory for generated images
-data/
+# Using this symlinked directory for generated images
+data
 
 # Blender previous save
 *.blend1
