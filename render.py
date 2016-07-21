@@ -92,14 +92,14 @@ class Render():
         self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
         self.opts['sun_strength'] = 2
         self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0] # High noon sun color
-        self.opts['camera_distance_factor'] = [4/12, 1/12] # [mu, sigma] = factor * min_distance
-        self.opts['camera_lens'] = [16, 1/4] # Mean focal length and sigma (almost 0 factor 2 away)
+        self.opts['camera_distance_factor'] = {"mean": 4/12, "sigma": 1/12} # factor * min_distance
+        self.opts['camera_lens'] = {"mean": 16, "log_sigma": 1/4} # Focal length lognormal dist
         self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2] # Not too high but above ground
         self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
         self.opts['resolution'] = [512, 512] # [x, y] pixels
         self.opts['film_exposure'] = 2 # Balances with sun strength and sky
         self.opts['cycles_samples'] = 64 # Increase to reduce noise
-        self.opts['sky'] = {} # Several possibilities here, see set_sky(
+        self.opts['sky'] = {} # Several optional possibilities here, see set_sky(
 
     def write_conf(self, conf_file: str):
         """Write current configuration to conf_file"""
@@ -138,15 +138,15 @@ class Render():
         """Generate a random camera position with the objects in view"""
 
         # Random focal length (approx median, relative sigma)
-        focal_length = np.random.lognormal(np.log(self.opts['camera_lens'][0]),
-                                           self.opts['camera_lens'][1])
+        focal_length = np.random.lognormal(np.log(self.opts['camera_lens']['mean']),
+                                           self.opts['camera_lens']['log_sigma'])
         self.camera.data.lens = focal_length
 
         # Spherical coordinates of the camera position
         min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
         while True:
-            distance = np.random.normal(min_distance * self.opts['camera_distance_factor'][0],
-                                        min_distance * self.opts['camera_distance_factor'][1])
+            distance = min_distance * np.random.normal(self.opts['camera_distance_factor']['mean'],
+                                                       self.opts['camera_distance_factor']['sigma'])
             theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
             phi = np.random.uniform(0, 2*np.pi)
             # Location axes rotated due to default camera orientation
@@ -241,12 +241,12 @@ class Render():
         if 'noise_scale' in sky:
             tree.nodes['Noise Texture'].inputs['Scale'].default_value \
                 = np.random.lognormal(np.log(sky['noise_scale']['mean']),
-                                      sky['noise_scale']['sigma'])
+                                      sky['noise_scale']['log_sigma'])
         if 'cloud_ramp' in sky:
             ramp = tree.nodes['ColorRamp'].color_ramp
             ramp.elements[0].position = np.random.uniform(sky['cloud_ramp']['min'],
                                                           sky['cloud_ramp']['max'])
             ramp.elements[1].position = ramp.elements[0].position + sky['cloud_ramp']['diff']
         if 'translate' in sky:
-            tree.nodes['Mapping'].translation[0] = np.random.uniform(sky['translate']['low'],
-                                                                     sky['translate']['high'])
+            tree.nodes['Mapping'].translation[0] = np.random.uniform(sky['translate'][0],
+                                                                     sky['translate'][1])
