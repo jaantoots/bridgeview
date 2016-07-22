@@ -22,6 +22,14 @@ def landscape_tree(landscape):
     tree.balance()
     return tree
 
+def bounding_box(obj):
+    """Return a bounding box for a single object aligned with the global axes"""
+    vertices = [obj.matrix_world * vertex.co for vertex in obj.data.vertices]
+    box = np.zeros((3, 2))
+    box[:, 0] = np.min(vertices, axis=0)
+    box[:, 1] = np.max(vertices, axis=0)
+    return box
+
 # TODO: Test BoundingSphere (returns too large spheres and bounding box is not always correct)
 class BoundingSphere():
     """Return a sphere surrounding the objects
