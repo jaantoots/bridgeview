@@ -7,12 +7,30 @@ This contains the specific files for data generation.
 
 # Usage
 
-Run `pip3 install -r requirements.txt` and `pip install -r
-requirements2.txt` to ensure all necessary packages are installed.
+Run
+
+```
+$ pip3 install -r requirements.txt
+```
+
+and
+
+```
+pip install -r requirements2.txt
+```
+
+to ensure all necessary packages are installed.
 
 Blender needs to be told to find modules in the working directory
 (`path-to-blender` only needs to be provided if `blender` is not in
-`$PATH`): ``` $ source set-blender.sh [path-to-blender] ```
+`$PATH`):
 
-Help for modules is available as ``` $ blender --background --python
-FILE -- --help ```
+```
+$ source set-blender.sh [path-to-blender]
+```
+
+Help for modules is available as
+
+```
+$ blender --background --python FILE -- --help
+```
