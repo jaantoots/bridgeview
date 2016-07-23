@@ -1,1 +1,18 @@
-Models and rendering setup
+# Rendering and data generation
+
+This contains the specific files for data generation.
+
+- JSON files contain the configurations for different methods
+- `modify` is currently for use in interactive Blender sessions
+
+# Usage
+
+Run `pip3 install -r requirements.txt` and `pip install -r
+requirements2.txt` to ensure all necessary packages are installed.
+
+Blender needs to be told to find modules in the working directory
+(`path-to-blender` only needs to be provided if `blender` is not in
+`$PATH`): ``` $ source set-blender.sh [path-to-blender] ```
+
+Help for modules is available as ``` $ blender --background --python
+FILE -- --help ```
