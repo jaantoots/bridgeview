@@ -4,6 +4,7 @@ This contains the specific files for data generation.
 
 - JSON files contain the configurations for different methods
 - `modify` is currently for use in interactive Blender sessions
+- `exrconvert` is Python 2, everything else is Python 3
 
 # Usage
 
@@ -11,12 +12,7 @@ Run
 
 ```
 $ pip3 install -r requirements.txt
-```
-
-and
-
-```
-pip install -r requirements2.txt
+$ pip install -r requirements2.txt
 ```
 
 to ensure all necessary packages are installed.
