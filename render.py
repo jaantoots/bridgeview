@@ -1,4 +1,4 @@
-"""Provides methods for rendering the labelled model"""
+"""Provides methods for rendering the labelled model."""
 import json
 import os
 import hashlib
@@ -8,7 +8,7 @@ import bpy # pylint: disable=import-error
 from . import helpers
 
 def new_camera(resolution: list):
-    """Add a camera to the scene and set the resolution for rendering"""
+    """Add a camera to the scene and set the resolution for rendering."""
     bpy.ops.object.camera_add()
     camera = bpy.context.object
     bpy.data.scenes[0].camera = camera
@@ -19,7 +19,7 @@ def new_camera(resolution: list):
     return camera
 
 class Render():
-    """Configure and render the scene
+    """Configure and render the scene.
 
     Parameters are read from conf_file. During testing and setup one
     can be generated with the default parameters. It is possible to
@@ -31,6 +31,7 @@ class Render():
     """
 
     def __init__(self, objects: list, conf_file=None):
+        """Create Render object for specified Blender objects."""
         # Load configuration
         if conf_file is None:
             self._default()
@@ -38,7 +39,7 @@ class Render():
             with open(conf_file) as file:
                 self.opts = json.load(file)
 
-        # Initialise objects
+        # Initialise objects, terrain should be the first item in landscape
         self.objects = objects[:]
         self.landscape = helpers.all_instances(self.opts['landscape'][0], self.objects)[0]
         self.landscape_tree = helpers.landscape_tree(self.landscape)
@@ -53,7 +54,7 @@ class Render():
         self.camera = new_camera(self.opts['resolution'])
 
     def _default(self):
-        """Default configuration parameters"""
+        """Default configuration parameters."""
         self.opts = {}
         self.opts['landscape'] = ["Landscape"] # Parts not part of the bridge
         self.opts['sun_theta'] = [0, 17/18 * np.pi/2] # Not lower than 5 deg from horizon
@@ -70,18 +71,18 @@ class Render():
         self.opts['sky'] = {} # Several optional possibilities here, see set_sky(
 
     def write_conf(self, conf_file: str):
-        """Write current configuration to conf_file"""
+        """Write current configuration to conf_file."""
         with open(conf_file, 'w') as file:
             json.dump(self.opts, file)
 
     def random_sun(self):
-        """Generate a random rotation for the sun"""
+        """Generate a random rotation for the sun."""
         theta = np.random.uniform(self.opts['sun_theta'][0], self.opts['sun_theta'][1])
         phi = np.random.uniform(0, 2*np.pi)
         return [theta, 0, phi]
 
     def place_sun(self, rotation=None):
-        """Delete a previous sun (if exists) and create a new one at specified angle"""
+        """Delete a previous sun (if exists) and create a new one at specified angle."""
         bpy.ops.object.select_all(action='DESELECT')
         if self.sun is not None:
             self.sun.select = True
@@ -103,8 +104,7 @@ class Render():
         return self.sun
 
     def random_camera(self):
-        """Generate a random camera position with the objects in view"""
-
+        """Generate a random camera position with the objects in view."""
         # Random focal length (approx median, relative sigma)
         focal_length = np.random.lognormal(np.log(self.opts['camera_lens']['mean']),
                                            self.opts['camera_lens']['log_sigma'])
@@ -130,7 +130,7 @@ class Render():
         return focal_length, location.tolist(), rotation.tolist()
 
     def place_camera(self, focal_length=None, location=None, rotation=None):
-        """Place the camera at specified location and rotation"""
+        """Place the camera at specified location and rotation."""
         if focal_length is None:
             focal_length, location, rotation = self.random_camera()
 
@@ -142,7 +142,7 @@ class Render():
         return self.camera
 
     def render(self, path: str):
-        """Render the visual scene"""
+        """Render the visual scene."""
         # Render with Cycles engine
         bpy.data.scenes[0].render.engine = 'CYCLES'
         bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
@@ -151,7 +151,7 @@ class Render():
         bpy.ops.render.render(write_still=True)
 
     def render_semantic(self, path: str):
-        """Render the semantic labels"""
+        """Render the semantic labels."""
         # Render with Blender engine and no anti-aliasing
         bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
         bpy.data.scenes[0].render.use_antialiasing = False
@@ -162,7 +162,7 @@ class Render():
         bpy.data.scenes[0].render.engine = 'CYCLES'
 
     def render_depth(self, path: str):
-        """Render depth"""
+        """Render depth."""
         # Use Compositing nodes for Scene
         bpy.data.scenes[0].use_nodes = True
         tree = bpy.data.scenes[0].node_tree
@@ -193,7 +193,7 @@ class Render():
         os.rename(glob.glob(os.path.join(os.path.dirname(path), digest + '*'))[0], path)
 
     def set_sky(self):
-        """Set sun direction consistent with the rotation of sun and randomise clouds"""
+        """Set sun direction consistent with the rotation of sun and randomise clouds."""
         # Initialise node tree
         tree = bpy.data.worlds['World'].node_tree
 

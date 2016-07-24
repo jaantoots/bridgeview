@@ -1,13 +1,14 @@
-"""Provides methods for labelling the model before rendering"""
+"""Provides methods for labelling the model before rendering."""
 import json
 import randomcolor
 import bpy # pylint: disable=import-error
 from . import helpers
 
 class Labels():
-    """Identify parts by name and assign semantic labels as colors"""
+    """Identify parts by name and assign semantic labels as colors."""
 
     def __init__(self, objects: list):
+        """Create Labels for given list of Blender objects."""
         self.objects = objects[:]
         self.levels = []
         self.levels += [dict()] # 0: feature -> color
@@ -16,20 +17,20 @@ class Labels():
         self.parts = helpers.Dict() # structure -> parts
 
     def read(self, label_file: str):
-        """Read labelling from file"""
+        """Read labelling from file."""
         with open(label_file) as file:
             data = json.load(file)
             self.levels = data['levels']
             self.parts = helpers.Dict(data['parts'])
 
     def write(self, label_file: str):
-        """Write labelling to file"""
+        """Write labelling to file."""
         with open(label_file, 'w') as file:
             data = {'levels': self.levels, 'parts': self.parts}
             json.dump(data, file)
 
     def def_structure(self, structure: str, parts: list):
-        """Define parts in a structure and color the structure and parts
+        """Define parts in a structure and color the structure and parts.
 
         Assign parts to be members of a structure. Every structure is
         assigned a hue; the level 1 structure is assigned a color and
@@ -52,17 +53,16 @@ class Labels():
             self.levels[2][part] = color
 
     def structure_from_dict(self, parts_dict: dict):
-        """Define all structures in parts_dict
+        """Define all structures in parts_dict.
 
-        Convenience method for defining parts in structures and having
-        them colored
+        Convenience method for defining parts in structures and having them colored
 
         """
         for structure, parts in parts_dict.items():
             self.def_structure(structure, parts)
 
     def def_features(self, features: list):
-        """Define all non-bridge features
+        """Define all non-bridge features.
 
         Features that are not part of the bridge have the same label
         on level 0 and level 1. All colors are available on level 0,
@@ -81,7 +81,7 @@ class Labels():
             self.levels[1][feature] = color
 
     def color_level(self, level: int):
-        """Color all objects according to level
+        """Color all objects according to level.
 
         Apply the colors corresponding to `level`. Using too many
         if-branches adding an annoying amount of cyclomatic
@@ -120,13 +120,13 @@ class Labels():
                         self._color_parts(part, self.levels[0]['bridge'])
 
     def _color_parts(self, part: str, color: str):
-        """Color all instances of a part, or all objects if part is ''"""
+        """Color all instances of a part, or all objects if part is ''."""
         instances = helpers.all_instances(part, self.objects)
         for obj in instances:
             color_object(obj, color)
 
 def color_object(obj, color: str):
-    """Color an object with color
+    """Color an object with color.
 
     Find or create a material with the specified color and make this
     the active material of the object
@@ -149,7 +149,7 @@ def color_object(obj, color: str):
     obj.active_material = material
 
 def hex_to_rgb(color: str):
-    """Convert a hex color code into rgb 3-tuple"""
+    """Convert a hex color code into rgb 3-tuple."""
     rgb = int(color[1:], 16)
     r = ((rgb >> 16) & 255)/255 # pylint: disable=invalid-name
     g = ((rgb >> 8) & 255)/255 # pylint: disable=invalid-name
