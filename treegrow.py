@@ -1,4 +1,4 @@
-"""Place trees randomly across scene"""
+"""Place trees randomly across scene."""
 import sys
 import argparse
 import numpy as np
@@ -7,9 +7,10 @@ import bpy # pylint: disable=import-error
 import bridge.helpers
 
 class TreeGrow():
-    """Grow trees on landscape with a specified group scale and hard clearance"""
+    """Grow trees on landscape with a specified group scale and hard clearance."""
 
     def __init__(self, landscape, other_trees: set, scale: float=8., clearance: float=8.):
+        """Create TreeGrow object on landscape with other trees to avoid."""
         self.landscape = landscape
         self.scale = scale
         self.clearance = clearance
@@ -23,7 +24,7 @@ class TreeGrow():
         self._init_height = 15
 
     def grow_trees(self, number: int, seed_tree: list):
-        """Grow N trees using the last element of seed_tree as a starting point"""
+        """Grow N trees using the last element of seed_tree as a starting point."""
         if number == 0:
             return seed_tree
         print("==> Still growing {:d} tree(s)".format(number))
@@ -31,7 +32,7 @@ class TreeGrow():
         return self.grow_trees(number - 1, seed_tree)
 
     def grow_tree(self, parent_tree):
-        """Grow a tree near parent_tree and return it"""
+        """Grow a tree near parent_tree and return it."""
         # Find an empty area for the tree with a preference for close placement
         print("Find location...")
         while True:
@@ -63,16 +64,16 @@ class TreeGrow():
         return tree
 
     def _found_clearing(self, location):
-        """Check whether any other trees are too close (beware the quadratic scaling)"""
+        """Check whether any other trees are too close (beware the quadratic scaling)."""
         for tree in self.trees:
             if np.linalg.norm(location - tree.location) < self.clearance:
                 return False
         return True
 
     def _find_height(self, location):
-        """Use scipy.optimize to find ground height"""
+        """Use scipy.optimize to find ground height."""
         def height(point_z):
-            """Return distance to landscape"""
+            """Return distance to landscape."""
             point = location[:]
             point[2] = point_z
             _, _, dist = self.landscape_tree.find(point)
@@ -81,7 +82,7 @@ class TreeGrow():
         return res.x
 
 def main():
-    """Grow trees in model where a seed tree has already been placed"""
+    """Grow trees in model where a seed tree has already been placed."""
     print("\n==> {:s}".format(__file__))
     # Get all arguments after '--'
     try:
@@ -113,7 +114,7 @@ def main():
         grow.grow_trees(number, [bpy.data.objects[tree]])
 
 def segment(number: int, pieces: int, res: list=None):
-    """Segment a number into pieces with equal probabilities (binomial distribution)"""
+    """Segment a number into pieces with equal probabilities (binomial distribution)."""
     if res is None:
         res = []
     if pieces == 0:

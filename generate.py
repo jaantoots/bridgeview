@@ -1,5 +1,4 @@
-"""Run Blender in background mode with model and this script to
-generate the data.
+"""Run Blender in background mode with model and this script to generate the data.
 
 For help: blender --background --python generate.py -- --help
 
@@ -14,7 +13,7 @@ import bpy # pylint: disable=import-error
 import bridge
 
 class Generate():
-    """Generate random views of the model with textures and labels
+    """Generate random views of the model with textures and labels.
 
     Configurations for bridge package objects loaded from files
     specified in the argument configuration file. Data is generated
@@ -23,6 +22,7 @@ class Generate():
     """
 
     def __init__(self, path: str, files: dict):
+        """Create Generate object with specified configuration files and output to path."""
         clean_scene()
         self.objects = bpy.data.objects[:]
         self.path = path
@@ -30,7 +30,7 @@ class Generate():
         self._load()
 
     def _load(self):
-        """Initialise objects with configurations from files"""
+        """Initialise objects with configurations from files."""
         # Labels file needs to be manually created
         labels_path = os.path.join(self.path, self.files['labels'])
         self.labels = bridge.labels.Labels(self.objects)
@@ -50,14 +50,14 @@ class Generate():
             self.render.write_conf(render_path)
 
     def point(self):
-        """Return a random sun and camera setup"""
+        """Return a random sun and camera setup."""
         sun_rotation = self.render.random_sun()
         camera_lens, camera_location, camera_rotation = self.render.random_camera()
         return {'sun_rotation': sun_rotation, 'camera_lens': camera_lens,
                 'camera_location': camera_location, 'camera_rotation': camera_rotation}
 
     def run(self, size: int=1):
-        """Generate the data, `size` sets of visual images and labels
+        """Generate the data, `size` sets of visual images and labels.
 
         If data output file already exists, only create missing images
         (`size` is ignored). Otherwise, generate points to file and
@@ -106,14 +106,14 @@ class Generate():
             self.render.render_depth(path)
 
 def clean_scene():
-    """Clear all cameras and lamps (suns) from the model"""
+    """Clear all cameras and lamps (suns) from the model."""
     for obj in [obj for obj in bpy.data.objects if obj.type == 'CAMERA' or obj.type == 'LAMP']:
         bpy.ops.object.select_all(action='DESELECT')
         obj.select = True
         bpy.ops.object.delete(use_global=False)
 
 def main():
-    """Parse the arguments and generate data"""
+    """Parse the arguments and generate data."""
     print("\n==> {:s}".format(__file__))
     # Get all arguments after '--'
     try:

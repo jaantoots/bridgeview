@@ -1,8 +1,5 @@
 #!/usr/bin/env python2
-"""Convert an OpenEXR image file containing depth data to plain text
-tab-separated values
-
-"""
+"""Convert an OpenEXR image file containing depth data to plain text tab-separated values."""
 import sys
 import os
 import glob
@@ -12,7 +9,7 @@ import OpenEXR
 import Imath
 
 def convert_to_tsv(src, dest):
-    """Convert OpenEXR to TSV"""
+    """Convert OpenEXR to TSV."""
     # Input from any channel as binary data
     exr = OpenEXR.InputFile(src)
     red_str = exr.channel('R', Imath.PixelType(Imath.PixelType.FLOAT))
@@ -26,7 +23,7 @@ def convert_to_tsv(src, dest):
         os.path.basename(__file__))))
 
 def main():
-    """Run conversion using files supplied as arguments"""
+    """Run conversion using files supplied as arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__)
     parser.add_argument('src', type=str, nargs='+', help="Input OpenEXR file(s)")
