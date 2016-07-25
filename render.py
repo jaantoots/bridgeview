@@ -21,12 +21,15 @@ def new_camera(resolution: list):
 class Render():
     """Configure and render the scene.
 
-    Parameters are read from conf_file. During testing and setup one
-    can be generated with the default parameters. It is possible to
-    place the sun and the camera randomly and create the
-    renders. However, generating the sun and camera positions
-    beforehand allows doing all the visual renders first and the
-    semantic renders only afterwards (recommended).
+    Parameters are read from conf_file. During testing and setup one can be generated with the
+    default parameters. It is possible to place the sun and the camera randomly and create the
+    renders. However, generating the sun and camera positions beforehand allows doing all the visual
+    renders first and the semantic renders only afterwards (recommended, as semantic and depth
+    renders may break visual rendering setup).
+
+    Blender file should be set up with the correct settings: sky, clouds, mist and Cycles
+    parameters. Only Cycles samples and film exposure are set from the configuration file with the
+    expectation that these might be necessary for finetuning the quality.
 
     """
 
