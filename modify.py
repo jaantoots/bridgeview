@@ -10,6 +10,7 @@ def translate_group(group, translate):
     for name in group:
         bpy.data.objects[name].select = True
     bpy.ops.transform.translate(value=translate)
+    bpy.ops.object.select_all(action='DESELECT')
 
 def scale_object(obj, value: float, axis):
     """Scale an object by value along axis."""
@@ -45,8 +46,12 @@ class Scale():
             else:
                 raise ValueError("Name already exists, specify overwrite to write anyway")
 
-    def scale(self, value: float, axis_index: int, reference: str):
-        """Scale the defined group by value along axis and translate other groups accordingly."""
+    def scale(self, value: float, axis_index: int, reference: str, base: str='scale'):
+        """Scale the defined group by value along axis and translate other groups accordingly.
+
+        The 'scale' group is scaled with end structures translated. All groups are translated to
+        have the group provided as `base` remain stationary.
+        """
         assert self.groups is not None, "Groups not defined."
         # Set axis
         axis = np.zeros(3, dtype=bool)
@@ -67,8 +72,16 @@ class Scale():
             end_length = end_box[1] - end_box[0]
             scale_object(bpy.data.objects[name], end_length/start_length, axis)
 
-        # Translate the min and max groups
-        translate = end_ref - start_ref
-        translate_group(self.groups['min'], translate[0] * axis)
-        translate_group(self.groups['max'], translate[1] * axis)
-        bpy.ops.object.select_all(action='DESELECT')
+        # Translate the groups according to base selection
+        translate = (end_ref - start_ref)*axis
+        if base == 'min':
+            translate_group(self.groups['scale'], -translate[0])
+            translate_group(self.groups['max'], translate[1] - translate[0])
+        elif base == 'scale':
+            translate_group(self.groups['min'], translate[0])
+            translate_group(self.groups['max'], translate[1])
+        elif base == 'max':
+            translate_group(self.groups['min'], translate[0] - translate[1])
+            translate_group(self.groups['scale'], -translate[1])
+        else:
+            raise ValueError("Translate failed: base group name invalid {:s}".format(base))
