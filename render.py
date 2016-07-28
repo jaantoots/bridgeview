@@ -65,6 +65,7 @@ class Render():
         self.opts['sun_strength'] = 2
         self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0] # High noon sun color
         self.opts['camera_distance_factor'] = {"mean": 4/12, "sigma": 1/12} # factor * min_distance
+        self.opts['camera_clearance'] = 1.0 # Minimum distance above landscape
         self.opts['camera_lens'] = {"mean": 16, "log_sigma": 1/4} # Focal length lognormal dist
         self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2] # Not too high but above ground
         self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
@@ -123,9 +124,9 @@ class Render():
             # Location axes rotated due to default camera orientation
             location = self.sphere.centre + distance * np.array(
                 [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
-            # Check if above landscape
+            # Check if above landscape by at least specified amount
             closest_vertex = self.landscape_tree.find(location)
-            if location[2] > closest_vertex[2]:
+            if location[2] > closest_vertex[2] + self.opts['camera_clearance']:
                 break
 
         rotation = np.array([theta, 0, np.pi + phi])
