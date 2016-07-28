@@ -116,7 +116,8 @@ class Labels():
                     self._color_parts(feature, color)
                 # Bridge object names start with labels on level 2
                 else:
-                    for part in self.levels[2]:
+                    for part in [part for structure in self.parts
+                                 for part in self.parts[structure]]:
                         self._color_parts(part, self.levels[0]['bridge'])
 
     def _color_parts(self, part: str, color: str):
