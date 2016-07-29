@@ -165,8 +165,9 @@ class Render():
 
     def render_semantic(self, path: str):
         """Render the semantic labels."""
-        # Render with Blender engine and no anti-aliasing
+        # Render with Blender engine, disable node tree and anti-aliasing
         bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
+        bpy.data.scenes[0].use_nodes = False
         bpy.data.scenes[0].render.use_antialiasing = False
         bpy.data.scenes[0].world.horizon_color = (0, 0, 0)
         bpy.data.scenes[0].render.filepath = path
