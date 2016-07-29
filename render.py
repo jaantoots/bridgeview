@@ -146,7 +146,16 @@ class Render():
         return self.camera
 
     def render(self, path: str):
-        """Render the visual scene."""
+        """Render the visual scene.
+
+        Should be run before other types of rendering as some detailed
+        settings (e.g. mist, indirect clamping, multiple importance)
+        are only set in the Blend file. These settings are not
+        guaranteed to be stable after semantic rendering that uses
+        Blender Render and scene node tree will be cleared for depth
+        rendering.
+
+        """
         # Render with Cycles engine
         bpy.data.scenes[0].render.engine = 'CYCLES'
         bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
@@ -162,20 +171,24 @@ class Render():
         bpy.data.scenes[0].world.horizon_color = (0, 0, 0)
         bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)
-        # Switch back to Cycles to have correct properties (for visual renders)
-        bpy.data.scenes[0].render.engine = 'CYCLES'
 
     def render_depth(self, path: str):
-        """Render depth."""
+        """Render depth.
+
+        WARNING: This will clear the scene node tree. Any custom
+        configuration will be lost and other types of rendering will
+        not work afterwards.
+
+        """
+        bpy.data.scenes[0].render.engine = 'CYCLES'
         # Use Compositing nodes for Scene
         bpy.data.scenes[0].use_nodes = True
         tree = bpy.data.scenes[0].node_tree
 
-        # Configure File Output node
-        if tree.nodes.get('File Output') is None:
-            file_output = tree.nodes.new('CompositorNodeOutputFile')
-        else:
-            file_output = tree.nodes['File Output']
+        # Clear the tree and create nodes
+        tree.nodes.clear()
+        render_layers = tree.nodes.new('CompositorNodeRLayers')
+        file_output = tree.nodes.new('CompositorNodeOutputFile')
         file_output.format.file_format = 'OPEN_EXR'
         file_output.base_path = os.path.dirname(path)
 
@@ -184,13 +197,11 @@ class Render():
         sha.update(np.array(self.camera.location)) # Different for every image
         digest = sha.hexdigest()
         file_output.file_slots[0].path = digest + '_'
+        bpy.data.scenes[0].render.filepath = os.path.join('/tmp', digest + '.png')
 
         # Connect depth rendering to outputs
         tree.links.clear()
-        tree.links.new(tree.nodes['Render Layers'].outputs['Z'],
-                       tree.nodes['Composite'].inputs['Image'])
-        tree.links.new(tree.nodes['Render Layers'].outputs['Z'],
-                       file_output.inputs[0])
+        tree.links.new(render_layers.outputs['Z'], file_output.inputs[0])
 
         # Write the render and rename
         bpy.ops.render.render(write_still=True)
