@@ -56,7 +56,7 @@ class Generate():
         return {'sun_rotation': sun_rotation, 'camera_lens': camera_lens,
                 'camera_location': camera_location, 'camera_rotation': camera_rotation}
 
-    def run(self, size: int=1):
+    def run(self, size: int=1, all_levels: bool=False):
         """Generate the data, `size` sets of visual images and labels.
 
         If data output file already exists, only create missing images
@@ -86,7 +86,8 @@ class Generate():
             self.render.render(path)
 
         # Render semantic labels
-        for level in range(3):
+        levels = range(3) if all_levels else [2] # Default is to generate only level 2
+        for level in levels:
             self.labels.color_level(level) # Only change materials once per level for efficiency
             for seq, point in data.items():
                 path = os.path.join(self.path, "{:s}.sem.{:d}.png".format(seq, level))
@@ -131,6 +132,8 @@ def main():
                         help="Configuration file (default: conf.json)")
     parser.add_argument("-s", "--size", metavar="N", type=int, default=4,
                         help="Number of images to generate (default: 4)")
+    parser.add_argument("-l", "--all-levels", action='store_true',
+                        help="Generate all levels of semantic labels (otherwise only level 2).")
     args = parser.parse_args(argv)
 
     # Paths
@@ -150,7 +153,7 @@ def main():
             shutil.copy(file, path)
 
     gen = Generate(path, files)
-    gen.run(args.size)
+    gen.run(args.size, args.all_levels)
     print()
 
 if __name__ == "__main__":
