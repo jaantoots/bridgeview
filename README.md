@@ -7,8 +7,8 @@ objects are provided.
 
 # Usage
 
-Similar to the usage of `bridge-render` that uses this package for lower level
-interfacing with Blender.
+Similar to the usage of `bridge-render` which provides high-level functionality
+using this package.
 
 Install all necessary packages:
 
