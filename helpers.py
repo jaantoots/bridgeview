@@ -1,5 +1,7 @@
 """Objects used by multiple modules."""
+import json
 import numpy as np
+import bpy # pylint: disable=import-error
 import mathutils # pylint: disable=import-error
 
 class Dict(dict):
@@ -32,16 +34,50 @@ def bounding_box(obj):
     box[1] = np.max(vertices, axis=0)
     return box
 
-# TODO: Test BoundingSphere (returns too large spheres and bounding box is not always correct)
 class BoundingSphere():
     """Sphere surrounding the objects.
 
-    Unfortunately this seems to return slightly weird stuff occasionally.
+    Specify a bounding sphere manually or find it based on the objects.
 
     """
 
-    def __init__(self, objects: list, centre=None):
+    def __init__(self, centre=None, radius=None):
+        """Initialise a bounding sphere with given centre and radius if given."""
+        self.centre = centre
+        self.radius = radius
+        self.vis = None
+
+    def visualise(self, centre=None, radius=None):
+        """Visualise the bounding sphere by creating a sphere in the scene."""
+        if centre is not None:
+            self.centre = centre
+        if radius is not None:
+            self.radius = radius
+        if self.centre is None or self.radius is None:
+            raise ValueError("Centre and radius must be defined")
+        # Delete previous sphere (if exists) and create new
+        bpy.ops.object.select_all(action='DESELECT')
+        if self.vis is not None:
+            self.vis.select = True
+            bpy.ops.object.delete()
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=4, size=self.radius, location=self.centre)
+        self.vis = bpy.context.object
+        # Print info for adding to conf files
+        print(json.dumps({"centre": self.centre, "radius": self.radius}))
+        return self.vis
+
+    def clean(self):
+        """Remove the visualisation sphere from the scene."""
+        bpy.ops.object.select_all(action='DESELECT')
+        if self.vis is not None:
+            self.vis.select = True
+            bpy.ops.object.delete()
+            self.vis = None
+
+    def find(self, objects: list, centre=None):
         """Return a bounding sphere for the objects with optionally specified centre."""
+        # TODO: Returns too large spheres and bounding box is not always correct.
         def minmax(index, axis):
             """Choose min or max depending on axis at bounding box corner index."""
             is_max = (index >> axis) % 2 # Control bit in index corresponding to axis
@@ -54,3 +90,4 @@ class BoundingSphere():
                                        for x in objects]) for j in range(3)] for i in range(8)])
         self.centre = np.sum(box, axis=0)/8 if centre is None else centre
         self.radius = np.max(np.linalg.norm(box - self.centre, axis=1))
+        return self.centre, self.radius

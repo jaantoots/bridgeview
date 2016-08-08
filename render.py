@@ -52,7 +52,8 @@ class Render():
             for obj in helpers.all_instances(obj_name, self.objects):
                 self.objects.remove(obj)
 
-        self.sphere = helpers.BoundingSphere(self.objects)
+        self.sphere = helpers.BoundingSphere()
+        self.sphere.find(self.objects)
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
 
