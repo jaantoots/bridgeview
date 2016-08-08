@@ -1,4 +1,4 @@
-"""Modify bridge structure according to user-defined groups."""
+"""Modify object structure according to user-defined groups."""
 import json
 import numpy as np
 import bpy # pylint: disable=import-error
@@ -85,3 +85,42 @@ class Scale():
             translate_group(self.groups['scale'], -translate[1])
         else:
             raise ValueError("Translate failed: base group name invalid {:s}".format(base))
+
+def dissolve_near(point, obj):
+    """Dissolve all vertices near coordinate point."""
+    # Deselect all vertices
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    # Find and select nearby vertices
+    for vert in obj.data.vertices:
+        length = (vert.co - point).length
+        if length < 0.5:
+            vert.select = True
+    # Dissolve vertices
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.dissolve_verts()
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+def dissolve_near_selected_vertex(obj):
+    """Dissolve all vertices near the selected vertex in the tree."""
+    bpy.ops.object.mode_set(mode='OBJECT')
+    selected_vertex = [vert for vert in obj.data.vertices if vert.select]
+    if len(selected_vertex) == 1:
+        dissolve_near(selected_vertex[0].co, obj)
+    else:
+        raise(ValueError, "Exactly one vertex must be selected.")
+
+def limit_dissolve(obj, axis_index, limit):
+    """Dissolve the vertices of object that have coordinates below the limit along axis."""
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.scenes[0].objects.active = obj
+    def dissolve_next():
+        """Dissolve next vertex group and return True, else return False."""
+        for vert in obj.data.vertices:
+            if vert.co[axis_index] < limit:
+                dissolve_near(vert.co, obj)
+                return True
+        return False
+    while dissolve_next(): pass
+    bpy.data.scenes[0].objects.active = None
