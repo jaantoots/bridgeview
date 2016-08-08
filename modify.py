@@ -109,7 +109,7 @@ def dissolve_near_selected_vertex(obj):
     if len(selected_vertex) == 1:
         dissolve_near(selected_vertex[0].co, obj)
     else:
-        raise(ValueError, "Exactly one vertex must be selected.")
+        raise ValueError("Exactly one vertex must be selected.")
 
 def limit_dissolve(obj, axis_index, limit):
     """Dissolve the vertices of object that have coordinates below the limit along axis."""
@@ -122,5 +122,6 @@ def limit_dissolve(obj, axis_index, limit):
                 dissolve_near(vert.co, obj)
                 return True
         return False
-    while dissolve_next(): pass
+    while dissolve_next():
+        pass
     bpy.data.scenes[0].objects.active = None
