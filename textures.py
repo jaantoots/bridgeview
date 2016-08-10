@@ -52,6 +52,21 @@ class Textures():
             bpy.ops.object.mode_set(mode='OBJECT')
         bpy.data.scenes[0].objects.active = None
 
+    def cube_project_all(self):
+        """Initialize objects for texturing using cube project.
+
+        Usually need to prepare the model by choosing the best
+        projection for each part manually. Cube projection seems to
+        work well most of the time.
+
+        """
+        for obj in self.objects:
+            bpy.data.scenes[0].objects.active = obj
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.uv.cube_project()
+            bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.data.scenes[0].objects.active = None
+
     def add_textures(self, group: str, textures: list):
         """Add available textures to group (or part if no group).
 
