@@ -70,15 +70,15 @@ class Labels():
         labels on level 1.
 
         """
-        rand_color = randomcolor.RandomColor()
-        self.levels[0] = {feature: rand_color.generate(luminosity='bright')[0]
-                          for feature in features}
         self.levels[0]['bridge'] = '#ffffff' # Bridge is white on level 0
 
-        # Monochrome colors for non-bridge structures on level 1
+        # Monochrome colors for non-bridge structures
+        rand_color = randomcolor.RandomColor()
         for feature, color in zip(features, rand_color.generate(
                 hue='monochrome', count=len(features), luminosity='bright')):
+            self.levels[0][feature] = color
             self.levels[1][feature] = color
+            self.levels[2][feature] = color
 
     def color_level(self, level: int):
         """Color all objects according to level.
