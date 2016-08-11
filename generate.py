@@ -138,6 +138,7 @@ def main():
         files = json.load(file)
     os.makedirs(path, exist_ok=True)
     for filepath in files.values():
+        filepath = os.path.join(os.path.dirname(args.conf), filepath)
         if not os.path.isfile(os.path.join(path, os.path.basename(filepath))):
             shutil.copy(filepath, path)
     # And make files dict point to the new files
