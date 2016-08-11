@@ -99,4 +99,4 @@ class BoundingSphere():
             ) for j in range(3)] for i in range(8)])
         self.centre = np.sum(box, axis=0)/8 if centre is None else centre
         self.radius = np.max(np.linalg.norm(box - self.centre, axis=1))
-        return self.centre, self.radius
+        return {"centre": self.centre, "radius": self.radius}

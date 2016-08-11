@@ -33,7 +33,7 @@ class Render():
 
     """
 
-    def __init__(self, objects: list, conf_file=None):
+    def __init__(self, objects: list, conf_file=None, spheres_file=None):
         """Create Render object for specified Blender objects."""
         # Load configuration
         if conf_file is None:
@@ -52,8 +52,15 @@ class Render():
             for obj in helpers.all_instances(obj_name, self.objects):
                 self.objects.remove(obj)
 
-        self.sphere = helpers.BoundingSphere()
-        self.sphere.find(self.objects)
+        # Initialise bounding spheres for camera views
+        if spheres_file is None:
+            sphere = helpers.BoundingSphere()
+            self.spheres = {}
+            self.spheres['default'] = sphere.find(self.objects)
+        else:
+            with open(spheres_file) as file:
+                self.spheres = json.load(file)
+
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
 
@@ -115,15 +122,18 @@ class Render():
                                            self.opts['camera_lens']['log_sigma'])
         self.camera.data.lens = focal_length
 
+        # Choose a sphere to render
+        sphere = self.spheres[np.random.choice(list(self.spheres.keys()))]
+
         # Spherical coordinates of the camera position
-        min_distance = self.sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
+        min_distance = sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
         while True:
             distance = min_distance * np.random.normal(self.opts['camera_distance_factor']['mean'],
                                                        self.opts['camera_distance_factor']['sigma'])
             theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
             phi = np.random.uniform(0, 2*np.pi)
             # Location axes rotated due to default camera orientation
-            location = self.sphere.centre + distance * np.array(
+            location = sphere.centre + distance * np.array(
                 [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
             # Check if above landscape by at least specified amount
             closest_vertex = self.landscape_tree.find(location)
