@@ -56,14 +56,16 @@ class Generate():
         # If output file is not empty, load points, otherwise generate points
         out_path = self.files['out']
         if os.path.getsize(out_path):
+            print("==Load points from file==")
             with open(out_path) as file:
                 data = json.load(file)
         else:
+            print("==Generate points==")
             data = {"{:03d}".format(i): self.point() for i in range(size)}
             with open(out_path, 'w') as file:
                 json.dump(data, file)
 
-        # Render the visual images
+        print("==Render visual images==")
         self.textures.texture()  # Texture randomly only once for performance
         for seq, point in data.items():
             path = os.path.join(self.path, "{:s}.vis.png".format(seq))
@@ -74,7 +76,7 @@ class Generate():
                 point['camera_lens'], point['camera_location'], point['camera_rotation'])
             self.render.render(path)
 
-        # Render semantic labels
+        print("==Render semantic labels==")
         levels = range(3) if all_levels else [2] # Default is to generate only level 2
         for level in levels:
             self.labels.color_level(level) # Only change materials once per level for efficiency
@@ -86,7 +88,7 @@ class Generate():
                     point['camera_lens'], point['camera_location'], point['camera_rotation'])
                 self.render.render_semantic(path)
 
-        # Render depth
+        print("==Render depth==")
         for seq, point in data.items():
             path = os.path.join(self.path, "{:s}.dep.exr".format(seq))
             if os.path.isfile(path):
@@ -112,7 +114,8 @@ def main():
         argv = []
 
     # Parse arguments
-    prog_text = "blender MODEL --background --factory-startup --python {:s} --".format(__file__)
+    prog_text = "blender MODEL --background --factory-startup" \
+                " --python {:s} --".format(os.path.relpath(__file__))
     parser = argparse.ArgumentParser(prog=prog_text,
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__, epilog="===")
