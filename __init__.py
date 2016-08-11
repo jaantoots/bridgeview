@@ -4,5 +4,6 @@ from . import labels
 from . import textures
 from . import render
 from . import helpers
+from . import modify
 
-__all__ = ("labels", "render", "textures", "helpers")
+__all__ = ("labels", "render", "textures", "helpers", "modify")
