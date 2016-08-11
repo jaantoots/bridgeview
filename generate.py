@@ -53,7 +53,7 @@ class Generate():
         create images.
 
         """
-        # Check if output file is not empty, load points from file, or generate points
+        # If output file is not empty, load points, otherwise generate points
         out_path = self.files['out']
         if os.path.getsize(out_path):
             with open(out_path) as file:
@@ -64,6 +64,7 @@ class Generate():
                 json.dump(data, file)
 
         # Render the visual images
+        self.textures.texture()  # Texture randomly only once for performance
         for seq, point in data.items():
             path = os.path.join(self.path, "{:s}.vis.png".format(seq))
             if os.path.isfile(path):
@@ -71,7 +72,6 @@ class Generate():
             self.render.place_sun(point['sun_rotation'])
             self.render.place_camera(
                 point['camera_lens'], point['camera_location'], point['camera_rotation'])
-            self.textures.texture() # Texture randomly if more than one texture provided for group
             self.render.render(path)
 
         # Render semantic labels
