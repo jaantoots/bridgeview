@@ -135,32 +135,47 @@ class Render():
         while True:
             distance = min_distance * np.random.normal(self.opts['camera_distance_factor']['mean'],
                                                        self.opts['camera_distance_factor']['sigma'])
-            theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
+            if (isinstance(self.opts.get('camera_clearance'), list)
+                    or self.opts.get('camera_theta') is None):
+                theta = np.pi/2
+            else:
+                theta = np.random.uniform(self.opts['camera_theta'][0],
+                                          self.opts['camera_theta'][1])
             phi = np.random.uniform(0, 2*np.pi)
             # Location axes rotated due to default camera orientation
             location = sphere['centre'] + distance * np.array(
                 [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
             # Check if above landscape by at least specified amount
-            if self._check_height(location):
+            if isinstance(self.opts.get('camera_clearance'), list):
+                location = self._choose_height(location)
                 break
+            else:
+                if self._check_height(location):
+                    break
 
         # Set the camera to face near sphere centre
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
         return focal_length, location.tolist(), rotation.tolist()
 
+    def _choose_height(self, location):
+        clearance = self.opts['camera_clearance']
+        closest_vertex, _, _ = self.landscape_tree.find(location)
+        if (location[2] > closest_vertex[2] + clearance[0]
+                and location[2] < closest_vertex[2] + clearance[1]):
+            return location
+        location[2] = closest_vertex[2] + np.random.uniform(clearance[0],
+                                                            clearance[1])
+        return self._choose_height(location)
+
     def _check_height(self, location):
         """Check that camera is above ground and not too high."""
-        closest_vertex = self.landscape_tree.find(location)
-        clearance = self.opts['camera_clearance']
-        # Not breaking backwards compatibility when only minimum is given
-        try:
-            if (location[2] > closest_vertex[2] + clearance[0]
-                    and location[2] < closest_vertex[2] + clearance[1]):
-                return True
-        except TypeError:
-            if location[2] > closest_vertex[2] + clearance:
-                return True
+        closest_vertex, _, _ = self.landscape_tree.find(location)
+        # Not breaking backwards compatibility when no clearance given
+        if (self.opts.get('camera_clearance') is not None and
+                location[2] > closest_vertex[2]
+                + self.opts['camera_clearance']):
+            return True
         return False
 
     def place_camera(self, focal_length=None, location=None, rotation=None):
