@@ -22,32 +22,21 @@ class Generate():
     """
 
     def __init__(self, path: str, files: dict):
-        """Create Generate object with specified configuration files and output to path."""
+        """Initialise with specified configuration files and output to path."""
         clean_scene()
         self.objects = bpy.data.objects[:]
         self.path = path
         self.files = files
-        self._load()
 
-    def _load(self):
-        """Initialise objects with configurations from files."""
-        # Labels file needs to be manually created
-        labels_path = os.path.join(self.path, self.files['labels'])
+        # Initialise objects with configurations from files
         self.labels = bridge.labels.Labels(self.objects)
-        self.labels.read(labels_path)
-
-        # Textures file needs to be manually created
-        textures_path = os.path.join(self.path, self.files['textures'])
+        self.labels.read(self.files['labels'])
         self.textures = bridge.textures.Textures(self.objects)
-        self.textures.read(textures_path)
-
-        # Render configuration can reasonably be expected to vary between different iterations
-        render_path = os.path.join(self.path, self.files['render'])
-        if os.path.isfile(render_path):
-            self.render = bridge.render.Render(self.objects, render_path)
-        else:
-            self.render = bridge.render.Render(self.objects)
-            self.render.write_conf(render_path)
+        self.textures.read(self.files['textures'])
+        # Render file can be created automatically but probably not
+        # when running, spheres file is optional and defaults to None
+        self.render = bridge.render.Render(self.objects, self.files['render'],
+                                           self.files.get('spheres'))
 
     def point(self):
         """Return a random sun and camera setup."""
@@ -65,7 +54,7 @@ class Generate():
 
         """
         # Check if output file is not empty, load points from file, or generate points
-        out_path = os.path.join(self.path, self.files['out'])
+        out_path = self.files['out']
         if os.path.getsize(out_path):
             with open(out_path) as file:
                 data = json.load(file)
@@ -148,9 +137,12 @@ def main():
     with open(args.conf) as file:
         files = json.load(file)
     os.makedirs(path, exist_ok=True)
-    for file in files.values():
-        if not os.path.isfile(os.path.join(path, file)):
-            shutil.copy(file, path)
+    for filepath in files.values():
+        if not os.path.isfile(os.path.join(path, os.path.basename(filepath))):
+            shutil.copy(filepath, path)
+    # And make files dict point to the new files
+    for key in files:
+        files[key] = os.path.join(path, os.path.basename(files[key]))
 
     gen = Generate(path, files)
     gen.run(args.size, args.all_levels)
