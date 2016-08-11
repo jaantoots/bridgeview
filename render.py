@@ -4,8 +4,9 @@ import os
 import hashlib
 import glob
 import numpy as np
-import bpy # pylint: disable=import-error
+import bpy  # pylint: disable=import-error
 from . import helpers
+
 
 def new_camera(resolution: list):
     """Add a camera to the scene and set the resolution for rendering."""
@@ -15,21 +16,25 @@ def new_camera(resolution: list):
     bpy.data.scenes[0].render.resolution_x = resolution[0]
     bpy.data.scenes[0].render.resolution_y = resolution[1]
     bpy.data.scenes[0].render.resolution_percentage = 100
-    camera.data.clip_end = 2000 # Maybe set dynamically if ground plane larger
+    camera.data.clip_end = 1e5  # Maybe set dynamically if ground plane larger
     return camera
+
 
 class Render():
     """Configure and render the scene.
 
-    Parameters are read from conf_file. During testing and setup one can be generated with the
-    default parameters. It is possible to place the sun and the camera randomly and create the
-    renders. However, generating the sun and camera positions beforehand allows doing all the visual
-    renders first and the semantic renders only afterwards (recommended, as semantic and depth
-    renders may break visual rendering setup).
+    Parameters are read from conf_file. During testing and setup one
+    can be generated with the default parameters. It is possible to
+    place the sun and the camera randomly and create the
+    renders. However, generating the sun and camera positions
+    beforehand allows doing all the visual renders first and the
+    semantic renders only afterwards (recommended, as semantic and
+    depth renders may break visual rendering setup).
 
-    Blender file should be set up with the correct settings: sky, clouds, mist and Cycles
-    parameters. Only Cycles samples and film exposure are set from the configuration file with the
-    expectation that these might be necessary for finetuning the quality.
+    Blender file should be set up with the correct settings: sky,
+    clouds, mist and Cycles parameters. Only Cycles samples and film
+    exposure are set from the configuration file with the expectation
+    that these might be necessary for finetuning the quality.
 
     """
 
@@ -67,20 +72,20 @@ class Render():
     def _default(self):
         """Default configuration parameters."""
         self.opts = {}
-        self.opts['landscape'] = ["Landscape"] # Parts not part of the bridge
-        self.opts['sun_theta'] = [0, 17/18 * np.pi/2] # Not lower than 5 deg from horizon
-        self.opts['sun_size'] = 0.02 # Realistic sun is smaller than the default value
-        self.opts['sun_strength'] = 2
-        self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0] # High noon sun color
-        self.opts['camera_distance_factor'] = {"mean": 4/12, "sigma": 1/12} # factor * min_distance
-        self.opts['camera_clearance'] = 1.0 # Minimum distance above landscape
-        self.opts['camera_lens'] = {"mean": 16, "log_sigma": 1/4} # Focal length lognormal dist
-        self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2] # Not too high but above ground
-        self.opts['camera_noise'] = 0.01 # Random rotation sigma [x, y, z] or float
-        self.opts['resolution'] = [512, 512] # [x, y] pixels
-        self.opts['film_exposure'] = 2 # Balances with sun strength and sky
-        self.opts['cycles_samples'] = 64 # Increase to reduce noise
-        self.opts['sky'] = {} # Several optional possibilities here, see set_sky(
+        self.opts['landscape'] = ["Landscape"]  # Parts not part of the bridge
+        self.opts['sun_theta'] = [0, 17/18 * np.pi/2]  # Higher than 5 deg
+        self.opts['sun_size'] = 0.02  # Realistic sun is smaller than default
+        self.opts['sun_strength'] = 8  # Good starting point
+        self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0]  # High noon sun
+        self.opts['camera_distance_factor'] = {"mean": 4/12, "sigma": 1/12}
+        self.opts['camera_clearance'] = [1.5, 2.3]  # Distance above landscape
+        self.opts['camera_lens'] = {"mean": 16, "log_sigma": 1/4}
+        self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2]  # Not too high
+        self.opts['camera_noise'] = 0.01  # Rotation sigma [x, y, z] or float
+        self.opts['resolution'] = [512, 512]  # [x, y] pixels
+        self.opts['film_exposure'] = 2  # Balances with sun strength and sky
+        self.opts['cycles_samples'] = 64  # Increase to reduce noise
+        self.opts['sky'] = {}  # Several possibilities here, see set_sky(
 
     def write_conf(self, conf_file: str):
         """Write current configuration to conf_file."""
@@ -136,13 +141,26 @@ class Render():
             location = sphere.centre + distance * np.array(
                 [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
             # Check if above landscape by at least specified amount
-            closest_vertex = self.landscape_tree.find(location)
-            if location[2] > closest_vertex[2] + self.opts['camera_clearance']:
+            if self._check_height(location):
                 break
 
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
         return focal_length, location.tolist(), rotation.tolist()
+
+    def _check_height(self, location):
+        """Check that camera is above ground and not too high."""
+        closest_vertex = self.landscape_tree.find(location)
+        clearance = self.opts['camera_clearance']
+        # Not breaking backwards compatibility when only minimum is given
+        try:
+            if (location[2] > closest_vertex[2] + clearance[0]
+                    and location[2] < closest_vertex[2] + clearance[1]):
+                return True
+        except TypeError:
+            if location[2] > closest_vertex[2] + clearance:
+                return True
+        return False
 
     def place_camera(self, focal_length=None, location=None, rotation=None):
         """Place the camera at specified location and rotation."""
@@ -220,8 +238,7 @@ class Render():
         os.rename(glob.glob(os.path.join(os.path.dirname(path), digest + '*'))[0], path)
 
     def set_sky(self):
-        """Set sun direction consistent with the rotation of sun and randomise clouds."""
-        # Initialise node tree
+        """Set sun direction consistent with the sun and randomise clouds."""
         tree = bpy.data.worlds['World'].node_tree
 
         # Set sun direction in sky (angles seem to be correct from testing)
@@ -239,9 +256,10 @@ class Render():
                                       sky['noise_scale']['log_sigma'])
         if 'cloud_ramp' in sky:
             ramp = tree.nodes['ColorRamp'].color_ramp
-            ramp.elements[0].position = np.random.uniform(sky['cloud_ramp']['min'],
-                                                          sky['cloud_ramp']['max'])
-            ramp.elements[1].position = ramp.elements[0].position + sky['cloud_ramp']['diff']
+            ramp.elements[0].position = np.random.uniform(
+                sky['cloud_ramp']['min'], sky['cloud_ramp']['max'])
+            ramp.elements[1].position = ramp.elements[0].position \
+                + sky['cloud_ramp']['diff']
         if 'translate' in sky:
-            tree.nodes['Mapping'].translation[0] = np.random.uniform(sky['translate'][0],
-                                                                     sky['translate'][1])
+            tree.nodes['Mapping'].translation[0] = np.random.uniform(
+                sky['translate'][0], sky['translate'][1])
