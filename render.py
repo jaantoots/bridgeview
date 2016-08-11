@@ -131,19 +131,20 @@ class Render():
         sphere = self.spheres[np.random.choice(list(self.spheres.keys()))]
 
         # Spherical coordinates of the camera position
-        min_distance = sphere.radius / np.tan(self.camera.data.angle_y/2) # Height < width
+        min_distance = sphere['radius'] / np.tan(self.camera.data.angle_y/2) # Height < width
         while True:
             distance = min_distance * np.random.normal(self.opts['camera_distance_factor']['mean'],
                                                        self.opts['camera_distance_factor']['sigma'])
             theta = np.random.uniform(self.opts['camera_theta'][0], self.opts['camera_theta'][1])
             phi = np.random.uniform(0, 2*np.pi)
             # Location axes rotated due to default camera orientation
-            location = sphere.centre + distance * np.array(
+            location = sphere['centre'] + distance * np.array(
                 [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
             # Check if above landscape by at least specified amount
             if self._check_height(location):
                 break
 
+        # Set the camera to face near sphere centre
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
         return focal_length, location.tolist(), rotation.tolist()
