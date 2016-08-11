@@ -1,8 +1,9 @@
 """Provide methods for texturing the scene for rendering."""
 import json
 import numpy as np
-import bpy # pylint: disable=import-error
+import bpy  # pylint: disable=import-error
 from . import helpers
+
 
 class Textures():
     """Identify parts by name, organise into texturing groups and texture.
@@ -77,7 +78,7 @@ class Textures():
         self.textures[group] += textures
 
     def add_parts_to_group(self, group: str, parts: list):
-        """Assign parts to belong in a group that gets textured with the same material."""
+        """Assign parts to belong in a group that gets textured the same."""
         self.groups[group] += parts
 
     def texture(self):
@@ -95,6 +96,7 @@ class Textures():
         instances = helpers.all_instances(part, self.objects)
         for obj in instances:
             texture_object(obj, texture)
+
 
 def texture_object(obj, texture: str):
     """Texture an object with texture.

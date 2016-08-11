@@ -49,7 +49,8 @@ class Render():
 
         # Initialise objects, terrain should be the first item in landscape
         self.objects = objects[:]
-        self.landscape = helpers.all_instances(self.opts['landscape'][0], self.objects)[0]
+        self.landscape = helpers.all_instances(
+            self.opts['landscape'][0], self.objects)[0]
         self.landscape_tree = helpers.landscape_tree(self.landscape)
 
         # Remove landscape
@@ -94,12 +95,13 @@ class Render():
 
     def random_sun(self):
         """Generate a random rotation for the sun."""
-        theta = np.random.uniform(self.opts['sun_theta'][0], self.opts['sun_theta'][1])
+        theta = np.random.uniform(self.opts['sun_theta'][0],
+                                  self.opts['sun_theta'][1])
         phi = np.random.uniform(0, 2*np.pi)
         return [theta, 0, phi]
 
     def place_sun(self, rotation=None):
-        """Delete a previous sun (if exists) and create a new one at specified angle."""
+        """Delete previous sun and create new at specified angle."""
         bpy.ops.object.select_all(action='DESELECT')
         if self.sun is not None:
             self.sun.select = True
@@ -113,28 +115,29 @@ class Render():
 
         # Set size, strength and sky
         self.sun.data.shadow_soft_size = self.opts['sun_size']
-        self.sun.data.node_tree.nodes['Emission'].inputs['Strength'].default_value \
-            = self.opts['sun_strength']
-        self.sun.data.node_tree.nodes['Emission'].inputs['Color'].default_value \
-            = self.opts['sun_color']
-        self.set_sky() # Set sun direction and random clouds
+        emission = self.sun.data.node_tree.nodes['Emission']
+        emission.inputs['Strength'].default_value = self.opts['sun_strength']
+        emission.inputs['Color'].default_value = self.opts['sun_color']
+        self.set_sky()  # Set sun direction and random clouds
         return self.sun
 
     def random_camera(self):
         """Generate a random camera position with the objects in view."""
         # Random focal length (approx median, relative sigma)
-        focal_length = np.random.lognormal(np.log(self.opts['camera_lens']['mean']),
-                                           self.opts['camera_lens']['log_sigma'])
+        focal_length = np.random.lognormal(
+            np.log(self.opts['camera_lens']['mean']),
+            self.opts['camera_lens']['log_sigma'])
         self.camera.data.lens = focal_length
 
         # Choose a sphere to render
         sphere = self.spheres[np.random.choice(list(self.spheres.keys()))]
 
         # Spherical coordinates of the camera position
-        min_distance = sphere['radius'] / np.tan(self.camera.data.angle_y/2) # Height < width
+        min_distance = sphere['radius'] / np.tan(self.camera.data.angle_y/2)
         while True:
-            distance = min_distance * np.random.normal(self.opts['camera_distance_factor']['mean'],
-                                                       self.opts['camera_distance_factor']['sigma'])
+            distance = min_distance * np.random.normal(
+                self.opts['camera_distance_factor']['mean'],
+                self.opts['camera_distance_factor']['sigma'])
             if (isinstance(self.opts.get('camera_clearance'), list)
                     or self.opts.get('camera_theta') is None):
                 theta = np.pi/2
@@ -144,7 +147,9 @@ class Render():
             phi = np.random.uniform(0, 2*np.pi)
             # Location axes rotated due to default camera orientation
             location = sphere['centre'] + distance * np.array(
-                [np.sin(theta)*np.sin(-phi), np.sin(theta)*np.cos(phi), np.cos(theta)])
+                [np.sin(theta)*np.sin(-phi),
+                 np.sin(theta)*np.cos(phi),
+                 np.cos(theta)])
             # Check if above landscape by at least specified amount
             if isinstance(self.opts.get('camera_clearance'), list):
                 location = self._choose_height(location)
@@ -240,10 +245,11 @@ class Render():
 
         # Generate random collisionless filename
         sha = hashlib.sha1()
-        sha.update(np.array(self.camera.location)) # Different for every image
+        sha.update(np.array(self.camera.location))  # Different for every image
         digest = sha.hexdigest()
         file_output.file_slots[0].path = digest + '_'
-        bpy.data.scenes[0].render.filepath = os.path.join('/tmp', digest + '.png')
+        bpy.data.scenes[0].render.filepath = os.path.join('/tmp',
+                                                          digest + '.png')
 
         # Connect depth rendering to outputs
         tree.links.clear()
@@ -251,7 +257,9 @@ class Render():
 
         # Write the render and rename
         bpy.ops.render.render(write_still=True)
-        os.rename(glob.glob(os.path.join(os.path.dirname(path), digest + '*'))[0], path)
+        os.rename(
+            glob.glob(os.path.join(os.path.dirname(path), digest + '*'))[0],
+            path)
 
     def set_sky(self):
         """Set sun direction consistent with the sun and randomise clouds."""

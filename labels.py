@@ -1,8 +1,9 @@
 """Provides methods for labelling the model before rendering."""
 import json
 import randomcolor
-import bpy # pylint: disable=import-error
+import bpy  # pylint: disable=import-error
 from . import helpers
+
 
 class Labels():
     """Identify parts by name and assign semantic labels as colors."""
@@ -11,10 +12,10 @@ class Labels():
         """Create Labels for given list of Blender objects."""
         self.objects = objects[:]
         self.levels = []
-        self.levels += [dict()] # 0: feature -> color
-        self.levels += [dict()] # 1: structure -> color
-        self.levels += [dict()] # 2: part -> color
-        self.parts = helpers.Dict() # structure -> parts
+        self.levels += [dict()]  # 0: feature -> color
+        self.levels += [dict()]  # 1: structure -> color
+        self.levels += [dict()]  # 2: part -> color
+        self.parts = helpers.Dict()  # structure -> parts
 
     def read(self, label_file: str):
         """Read labelling from file."""
@@ -39,7 +40,7 @@ class Labels():
         hues.
 
         """
-        index = len(self.parts) # Number of structures defined previously
+        index = len(self.parts)  # Number of structures defined previously
         rand_color = randomcolor.RandomColor()
         hues = ['red', 'green', 'blue', 'purple', 'yellow', 'orange', 'pink']
         if index >= len(hues):
@@ -47,7 +48,8 @@ class Labels():
             print("labels: WARNING: reusing hue '{:s}'".format(hues[index]))
 
         self.parts[structure] += parts
-        self.levels[1][structure] = rand_color.generate(hue=hues[index], luminosity='bright')[0]
+        self.levels[1][structure] = rand_color.generate(
+            hue=hues[index], luminosity='bright')[0]
         for part, color in zip(parts, rand_color.generate(
                 hue=hues[index], count=len(parts), luminosity='bright')):
             self.levels[2][part] = color
@@ -55,7 +57,8 @@ class Labels():
     def structure_from_dict(self, parts_dict: dict):
         """Define all structures in parts_dict.
 
-        Convenience method for defining parts in structures and having them colored
+        Convenience method for defining parts in structures and having
+        them colored
 
         """
         for structure, parts in parts_dict.items():
@@ -70,7 +73,7 @@ class Labels():
         labels on level 1.
 
         """
-        self.levels[0]['bridge'] = '#ffffff' # Bridge is white on level 0
+        self.levels[0]['bridge'] = '#ffffff'  # Bridge is white on level 0
 
         # Monochrome colors for non-bridge structures
         rand_color = randomcolor.RandomColor()
@@ -126,6 +129,7 @@ class Labels():
         for obj in instances:
             color_object(obj, color)
 
+
 def color_object(obj, color: str):
     """Color an object with color.
 
@@ -135,7 +139,8 @@ def color_object(obj, color: str):
     """
     material_name = "shadeless.{:s}".format(color)
 
-    # Create a shadeless diffuse material with the right color if it does not exist
+    # Create a shadeless diffuse material with the right color if it
+    # does not exist
     if material_name in [material.name for material in bpy.data.materials]:
         material = bpy.data.materials[material_name]
     else:
@@ -149,10 +154,11 @@ def color_object(obj, color: str):
     obj.data.materials.clear()
     obj.active_material = material
 
+
 def hex_to_rgb(color: str):
     """Convert a hex color code into rgb 3-tuple."""
     rgb = int(color[1:], 16)
-    r = ((rgb >> 16) & 255)/255 # pylint: disable=invalid-name
-    g = ((rgb >> 8) & 255)/255 # pylint: disable=invalid-name
-    b = ((rgb >> 0) & 255)/255 # pylint: disable=invalid-name
+    r = ((rgb >> 16) & 255)/255  # pylint: disable=invalid-name
+    g = ((rgb >> 8) & 255)/255  # pylint: disable=invalid-name
+    b = ((rgb >> 0) & 255)/255  # pylint: disable=invalid-name
     return r, g, b
