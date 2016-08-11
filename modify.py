@@ -1,8 +1,9 @@
 """Modify object structure according to user-defined groups."""
 import json
 import numpy as np
-import bpy # pylint: disable=import-error
+import bpy  # pylint: disable=import-error
 import bridge.helpers as helpers
+
 
 def translate_group(group, translate):
     """Translate all objects in group list by translate."""
@@ -11,6 +12,7 @@ def translate_group(group, translate):
         bpy.data.objects[name].select = True
     bpy.ops.transform.translate(value=translate)
     bpy.ops.object.select_all(action='DESELECT')
+
 
 def scale_object(obj, value: float, axis):
     """Scale an object by value along axis."""
@@ -21,6 +23,7 @@ def scale_object(obj, value: float, axis):
     bpy.ops.transform.resize(value=(axis*(value - 1) + np.ones(3)))
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.data.scenes[0].objects.active = None
+
 
 class Scale():
     """Scaling operations."""
@@ -36,7 +39,7 @@ class Scale():
             self.groups = data[name]
 
     def write_groups(self, filename: str, name: str, overwrite=True):
-        """Write groups definition to file, update an existing definition if overwrite is True."""
+        """Write groups definition to file, or update an existing one."""
         with open(filename) as file:
             data = json.load(file)
         with open(filename, 'w') as file:
@@ -44,13 +47,17 @@ class Scale():
                 data[name] = self.groups
                 json.dump(data, file)
             else:
-                raise ValueError("Name already exists, specify overwrite to write anyway")
+                raise ValueError(
+                    "Name already exists, specify overwrite to write anyway")
 
-    def scale(self, value: float, axis_index: int, reference: str, base: str='scale'):
-        """Scale the defined group by value along axis and translate other groups accordingly.
+    def scale(self, value: float, axis_index: int,
+              reference: str, base: str='scale'):
+        """Scale by value along axis and translate other groups accordingly.
 
-        The 'scale' group is scaled with end structures translated. All groups are translated to
-        have the group provided as `base` remain stationary.
+        The 'scale' group is scaled with end structures
+        translated. All groups are translated to have the group
+        provided as `base` remain stationary.
+
         """
         assert self.groups is not None, "Groups not defined."
         # Set axis
@@ -62,7 +69,8 @@ class Scale():
         scale_object(bpy.data.objects[reference], value, axis)
         end_ref = helpers.bounding_box(bpy.data.objects[reference])
 
-        # Resize scale group using offsets as end structures should be translated without scaling
+        # Resize scale group using offsets as end structures should be
+        # translated without scaling
         for name in self.groups['scale']:
             if name == reference:
                 continue
@@ -84,7 +92,9 @@ class Scale():
             translate_group(self.groups['min'], translate[0] - translate[1])
             translate_group(self.groups['scale'], -translate[1])
         else:
-            raise ValueError("Translate failed: base group name invalid {:s}".format(base))
+            raise ValueError(
+                "Translate failed: base group name invalid {:s}".format(base))
+
 
 def dissolve_near(point, obj):
     """Dissolve all vertices near coordinate point."""
@@ -102,6 +112,7 @@ def dissolve_near(point, obj):
     bpy.ops.mesh.dissolve_verts()
     bpy.ops.object.mode_set(mode='OBJECT')
 
+
 def dissolve_near_selected_vertex(obj):
     """Dissolve all vertices near the selected vertex in the tree."""
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -111,10 +122,12 @@ def dissolve_near_selected_vertex(obj):
     else:
         raise ValueError("Exactly one vertex must be selected.")
 
+
 def limit_dissolve(obj, axis_index, limit):
-    """Dissolve the vertices of object that have coordinates below the limit along axis."""
+    """Dissolve the vertices with coordinates below the limit along axis."""
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.scenes[0].objects.active = obj
+
     def dissolve_next():
         """Dissolve next vertex group and return True, else return False."""
         for vert in obj.data.vertices:

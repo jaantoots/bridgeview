@@ -6,13 +6,13 @@ This contains the specific files for data generation.
 - `modify` is currently for use in interactive Blender sessions
 - `exrconvert` is Python 2, everything else is Python 3
 
-# Usage
+## Usage
 
 Install all necessary packages:
 
 ```
-$ pip3 install -r requirements.txt
-$ pip install -r requirements2.txt
+pip3 install -r requirements.txt
+pip install -r requirements2.txt
 ```
 
 Blender needs to be told to find modules in the working directory
@@ -20,11 +20,11 @@ Blender needs to be told to find modules in the working directory
 `$PATH`):
 
 ```
-$ source set-blender.sh [path-to-blender]
+source set-blender.sh [path-to-blender]
 ```
 
 Help for modules is available:
 
 ```
-$ blender --background --python FILE -- --help
+blender --background --python FILE -- --help
 ```
