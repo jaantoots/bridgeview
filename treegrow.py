@@ -60,7 +60,7 @@ class TreeGrow(BaseTreeGrow):
                 # Duplicate last tree and add a random rotation
                 bpy.ops.object.select_all(action='DESELECT')
                 previous_trees[-1].select = True
-                bpy.ops.object.duplicate_linked(
+                bpy.ops.object.duplicate_move_linked(
                     OBJECT_OT_duplicate={"linked": True})
                 bpy.ops.transform.rotate(value=np.random.uniform(0, 2*np.pi),
                                          axis=(0, 0, 1))
