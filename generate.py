@@ -1,4 +1,4 @@
-"""Run Blender in background mode with model and this script to generate the data.
+"""Run Blender in background mode with model and this script to generate data.
 
 For help: blender --background --python generate.py -- --help
 
@@ -9,7 +9,7 @@ import shutil
 import datetime
 import json
 import argparse
-import bpy # pylint: disable=import-error
+import bpy  # pylint: disable=import-error
 import bridge
 
 class Generate():
@@ -41,9 +41,9 @@ class Generate():
     def point(self):
         """Return a random sun and camera setup."""
         sun_rotation = self.render.random_sun()
-        camera_lens, camera_location, camera_rotation = self.render.random_camera()
-        return {'sun_rotation': sun_rotation, 'camera_lens': camera_lens,
-                'camera_location': camera_location, 'camera_rotation': camera_rotation}
+        lens, location, rotation = self.render.random_camera()
+        return {'sun_rotation': sun_rotation, 'camera_lens': lens,
+                'camera_location': location, 'camera_rotation': rotation}
 
     def run(self, size: int=1, all_levels: bool=False):
         """Generate the data, `size` sets of visual images and labels.
@@ -72,20 +72,24 @@ class Generate():
             if os.path.isfile(path):
                 continue
             self.render.place_sun(point['sun_rotation'])
-            self.render.place_camera(
-                point['camera_lens'], point['camera_location'], point['camera_rotation'])
+            self.render.place_camera(point['camera_lens'],
+                                     point['camera_location'],
+                                     point['camera_rotation'])
             self.render.render(path)
 
         print("==Render semantic labels==")
-        levels = range(3) if all_levels else [2] # Default is to generate only level 2
+        levels = range(3) if all_levels else [2]
         for level in levels:
-            self.labels.color_level(level) # Only change materials once per level for efficiency
+            # Only change materials once per level for efficiency
+            self.labels.color_level(level)
             for seq, point in data.items():
-                path = os.path.join(self.path, "{:s}.sem.{:d}.png".format(seq, level))
+                path = os.path.join(self.path,
+                                    "{:s}.sem.{:d}.png".format(seq, level))
                 if os.path.isfile(path):
                     continue
-                self.render.place_camera(
-                    point['camera_lens'], point['camera_location'], point['camera_rotation'])
+                self.render.place_camera(point['camera_lens'],
+                                         point['camera_location'],
+                                         point['camera_rotation'])
                 self.render.render_semantic(path)
 
         print("==Render depth==")
@@ -93,16 +97,20 @@ class Generate():
             path = os.path.join(self.path, "{:s}.dep.exr".format(seq))
             if os.path.isfile(path):
                 continue
-            self.render.place_camera(
-                point['camera_lens'], point['camera_location'], point['camera_rotation'])
+            self.render.place_camera(point['camera_lens'],
+                                     point['camera_location'],
+                                     point['camera_rotation'])
             self.render.render_depth(path)
+
 
 def clean_scene():
     """Clear all cameras and lamps (suns) from the model."""
-    for obj in [obj for obj in bpy.data.objects if obj.type == 'CAMERA' or obj.type == 'LAMP']:
+    for obj in [obj for obj in bpy.data.objects
+                if obj.type == 'CAMERA' or obj.type == 'LAMP']:
         bpy.ops.object.select_all(action='DESELECT')
         obj.select = True
         bpy.ops.object.delete(use_global=False)
+
 
 def main():
     """Parse the arguments and generate data."""
@@ -116,16 +124,18 @@ def main():
     # Parse arguments
     prog_text = "blender MODEL --background --factory-startup" \
                 " --python {:s} --".format(os.path.relpath(__file__))
-    parser = argparse.ArgumentParser(prog=prog_text,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=__doc__, epilog="===")
-    parser.add_argument("-n", "--name", type=str, help="Name of the generation run (optional)")
+    parser = argparse.ArgumentParser(
+        prog=prog_text, formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=__doc__, epilog="===")
+    parser.add_argument("-n", "--name", type=str,
+                        help="Name of the generation run (optional)")
     parser.add_argument("-c", "--conf", metavar="FILE", default="conf.json",
                         help="Configuration file (default: conf.json)")
     parser.add_argument("-s", "--size", metavar="N", type=int, default=4,
                         help="Number of images to generate (default: 4)")
-    parser.add_argument("-l", "--all-levels", action='store_true',
-                        help="Generate all levels of semantic labels (otherwise only level 2).")
+    parser.add_argument(
+        "-l", "--all-levels", action='store_true',
+        help="Generate all levels of semantic labels (default only level 2).")
     args = parser.parse_args(argv)
 
     # Paths
