@@ -11,6 +11,8 @@ import json
 import argparse
 import bpy  # pylint: disable=import-error
 import bridge
+import treegrow
+
 
 class Generate():
     """Generate random views of the model with textures and labels.
@@ -37,6 +39,13 @@ class Generate():
         # when running, spheres file is optional and defaults to None
         self.render = bridge.render.Render(self.objects, self.files['render'],
                                            self.files.get('spheres'))
+
+    def grow_trees(self):
+        """Grow trees according to the coordinates specified in file."""
+        with open(self.files['trees']) as file:
+            trees = json.load(file)
+            grower = treegrow.TreeGrow(self.render.landscape, trees)
+            grower.grow_all()
 
     def point(self):
         """Return a random sun and camera setup."""
@@ -136,6 +145,9 @@ def main():
     parser.add_argument(
         "-l", "--all-levels", action='store_true',
         help="Generate all levels of semantic labels (default only level 2).")
+    parser.add_argument(
+        "-t", "--grow-trees", action="store_true",
+        help="Place trees to specified coordinates, requires existing file.")
     args = parser.parse_args(argv)
 
     # Paths
@@ -159,6 +171,8 @@ def main():
         files[key] = os.path.join(path, os.path.basename(files[key]))
 
     gen = Generate(path, files)
+    if args.grow_trees:
+        gen.grow_trees()
     gen.run(args.size, args.all_levels)
     print()
 
