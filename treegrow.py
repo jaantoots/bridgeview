@@ -52,7 +52,7 @@ class TreeGrow(BaseTreeGrow):
         locations = self.trees[key]
         previous_trees = [obj for obj in bpy.data.objects
                           if obj.name.split('.')[0] == key]
-        self._init_height = previous_trees[0][2]
+        self._init_height = previous_trees[0].location[2]
         for location, tree in itertools.zip_longest(locations, previous_trees):
             if location is None:
                 break
