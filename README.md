@@ -1,10 +1,13 @@
 # Rendering and data generation
 
-This contains the specific files for data generation.
+This contains the porcelain methods for data generation and links to
+other necessary directories.
 
-- JSON files contain the configurations for different methods
-- `modify` is currently for use in interactive Blender sessions
-- `exrconvert` is Python 2, everything else is Python 3
+- Configuration files (in JSON) are required for data generation (see
+  `bridge` package and examples in `models`)
+- It is possible to add trees randomly or from a file using `treegrow`
+- `exrconvert` is useful for converting depth images from OpenEXR to
+  plain text (needs Python2 due to libraries)
 
 ## Usage
 
