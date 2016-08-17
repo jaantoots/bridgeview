@@ -75,11 +75,11 @@ class Generate():
                 json.dump(data, file)
 
         print("==Render visual images==")
-        self.textures.texture()  # Texture randomly only once for performance
         for seq, point in data.items():
             path = os.path.join(self.path, "{:s}.vis.png".format(seq))
             if os.path.isfile(path):
                 continue
+            self.textures.texture()
             self.render.place_sun(point['sun_rotation'])
             self.render.place_camera(point['camera_lens'],
                                      point['camera_location'],
