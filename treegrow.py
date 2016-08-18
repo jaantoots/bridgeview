@@ -3,7 +3,6 @@ import sys
 import argparse
 import itertools
 import numpy as np
-import scipy.optimize
 import bpy  # pylint: disable=import-error
 import bridge.helpers
 
@@ -17,19 +16,17 @@ class BaseTreeGrow():
         # Create landscape tree for fast closest point lookup
         self.landscape_tree = bridge.helpers.landscape_tree(landscape)
         # Set some default values
-        self._dig = [0., 0.000001]
+        self._dig = 0.1
         self._init_height = 15
 
     def _find_height(self, location):
-        """Use scipy.optimize to find ground height."""
-        def height(point_z):
-            """Return distance to landscape."""
-            point = location[:]
-            point[2] = point_z
-            _, _, dist = self.landscape_tree.find(point)
-            return dist
-        res = scipy.optimize.minimize(height, self._init_height)
-        return res.x
+        """Find the correct height for the tree."""
+        closest_vertex, _, _ = self.landscape_tree.find(location)
+        if (location[2] > closest_vertex[2] - self._dig
+                and location[2] < closest_vertex[2]):
+            return location
+        location[2] = closest_vertex[2] - np.random.uniform(0, self._dig)
+        return self._find_height(location)
 
 
 class TreeGrow(BaseTreeGrow):
@@ -66,9 +63,9 @@ class TreeGrow(BaseTreeGrow):
                                          axis=(0, 0, 1))
                 tree = bpy.context.selected_objects[0]
             # Find appropriate z coordinate at x, y position
-            location[2] = self._find_height(location)
-            # Dig the tree slightly into the ground
-            location[2] -= np.random.normal(self._dig[0], self._dig[1])
+            location[2] = self._init_height
+            location = self._find_height(location)
+            self._init_height = location[2]
             tree.location = location
 
     def grow_all(self):
@@ -111,9 +108,9 @@ class TreeGrowRandom(BaseTreeGrow):
 
         # Find appropriate z coordinate at x, y position
         print("Optimise height...")
-        location[2] = self._find_height(location)
-        # Dig the tree slightly into the ground
-        location[2] -= np.random.normal(self._dig[0], self._dig[1])
+        location[2] = self._init_height
+        location = self._find_height(location)
+        self._init_height = location[2]
         translate = location - parent_tree.location
 
         # Duplicate parent tree with translation and add a random rotation
