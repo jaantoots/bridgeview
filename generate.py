@@ -80,6 +80,7 @@ class Generate():
             if os.path.isfile(path):
                 continue
             self.textures.texture()
+            self.render.displace_landscape()
             self.render.place_sun(point['sun_rotation'])
             self.render.place_camera(point['camera_lens'],
                                      point['camera_location'],
