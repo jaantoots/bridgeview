@@ -287,3 +287,10 @@ class Render():
         if 'translate' in sky:
             tree.nodes['Mapping'].translation[0] = np.random.uniform(
                 sky['translate'][0], sky['translate'][1])
+
+    def displace_landscape(self):
+        """Randomise the location mapping for landscape variety."""
+        tree = self.landscape.data.materials[0].node_tree
+        mapping = tree.nodes.get('Mapping')
+        if mapping is not None:
+            mapping.translation = np.random.uniform(0, 1000, 3)
