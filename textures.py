@@ -62,6 +62,7 @@ class Textures():
 
         """
         for obj in self.objects:
+            print(obj.name)
             bpy.data.scenes[0].objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.uv.cube_project()
