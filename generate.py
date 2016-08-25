@@ -1,8 +1,25 @@
-"""Run Blender in background mode with model and this script to generate data.
+#!/bin/bash
+"true" '''\'
+[ -z "$(which blender)" ] \
+    && echo "blender not found: run the script manually" && exit 1
 
-For help: blender --background --python generate.py -- --help
+PYTHONPATH=$(python3 -c 'import sys; print(*sys.path, sep=":")')
 
-"""
+model=$1
+shift
+
+if [ "$(uname)" == "Darwin" ]; then
+    # Verbose env for Mac OS X
+    exec $(which env) -v PYTHONPATH=":$PYTHONPATH" blender "$model" \
+        --background --factory-startup --python "$0" -- "$@"
+else
+    # Unfortunately Linux doesn't have this flag
+    exec $(which env) PYTHONPATH=":$PYTHONPATH" blender "$model" \
+        --background --factory-startup --python "$0" -- "$@"
+fi
+
+exit 127
+'''
 import sys
 import os
 import shutil
@@ -12,6 +29,12 @@ import argparse
 import bpy  # pylint: disable=import-error
 import bridge
 import treegrow
+
+__doc__ = """Run this script with model to generate data.
+
+For help: blender --background --python generate.py -- --help
+
+"""
 
 
 class Generate():
@@ -124,7 +147,7 @@ def clean_scene():
 
 def main():
     """Parse the arguments and generate data."""
-    print("\n==> {:s}".format(__file__))
+    print("\n==> {:s}".format(os.path.relpath(__file__)))
     # Get all arguments after '--'
     try:
         argv = sys.argv[sys.argv.index('--') + 1:]
@@ -132,8 +155,8 @@ def main():
         argv = []
 
     # Parse arguments
-    prog_text = "blender MODEL --background --factory-startup" \
-                " --python {:s} --".format(os.path.relpath(__file__))
+    prog_text = "( {0:s} MODEL | blender MODEL --background " \
+                "--python {0:s} -- )".format(os.path.relpath(__file__))
     parser = argparse.ArgumentParser(
         prog=prog_text, formatter_class=argparse.RawDescriptionHelpFormatter,
         description=__doc__, epilog="===")
