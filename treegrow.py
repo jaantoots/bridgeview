@@ -73,7 +73,7 @@ class TreeGrow(BaseTreeGrow):
     def grow_trees(self, key: str):
         """Grow trees with the specified key."""
         locations = self.locations[key]
-        previous_trees = helpers.all_instances(key)
+        previous_trees = helpers.all_instances(key, bpy.data.objects)
         self._init_height = previous_trees[0].location[2]
         for location, tree in itertools.zip_longest(locations, previous_trees):
             if location is None:
@@ -113,7 +113,7 @@ class TreeGrowRandom(BaseTreeGrow):
         self.clearance = clearance
         # Find existing trees
         self.trees = [obj for tree in other_trees
-                      for obj in helpers.all_instances(tree)]
+                      for obj in helpers.all_instances(tree, bpy.data.objects)]
 
         # Avoid other objects in the scene
         avoid_objects = [obj for obj in bpy.data.objects
