@@ -22,6 +22,7 @@ exit 127
 '''
 import sys
 import os
+import json
 import argparse
 import itertools
 import numpy as np
@@ -57,7 +58,7 @@ class BaseTreeGrow():
 class TreeGrow(BaseTreeGrow):
     """Grow trees at specified locations."""
 
-    def __init__(self, landscape, trees: dict):
+    def __init__(self, landscape, locations: dict):
         """Create trees on `landscape` as specified by `trees`.
 
         Dictionary `trees` should have existing object names as keys
@@ -67,36 +68,38 @@ class TreeGrow(BaseTreeGrow):
 
         """
         BaseTreeGrow.__init__(self, landscape)
-        self.trees = trees
+        self.locations = locations
 
     def grow_trees(self, key: str):
         """Grow trees with the specified key."""
-        locations = self.trees[key]
-        previous_trees = [obj for obj in bpy.data.objects
-                          if obj.name.split('.')[0] == key]
+        locations = self.locations[key]
+        previous_trees = helpers.all_instances(key)
         self._init_height = previous_trees[0].location[2]
         for location, tree in itertools.zip_longest(locations, previous_trees):
             if location is None:
                 break
             if tree is None:
-                # Duplicate last tree and add a random rotation
+                # Duplicate last tree
                 bpy.ops.object.select_all(action='DESELECT')
                 previous_trees[-1].select = True
                 bpy.ops.object.duplicate_move_linked(
                     OBJECT_OT_duplicate={"linked": True})
-                bpy.ops.transform.rotate(value=np.random.uniform(0, 2*np.pi),
-                                         axis=(0, 0, 1))
                 tree = bpy.context.selected_objects[0]
-            # Find appropriate z coordinate at x, y position
-            location[2] = self._init_height
-            location = self._find_height(location)
-            self._init_height = location[2]
-            tree.location = location
+            if not location.get("fixed"):
+                # Find appropriate z coordinate at x, y position
+                location["location"][2] = self._init_height
+                location["location"] = self._find_height(location["location"])
+                location["rotation"] = [0, 0, np.random.uniform(0, 2*np.pi)]
+                location["fixed"] = True
+            tree.location = location["location"]
+            tree.rotation_euler = location["rotation"]
+        return locations
 
     def grow_all(self):
         """Grow all trees."""
-        for key in self.trees:
+        for key in self.locations:
             self.grow_trees(key)
+        return self.locations
 
 
 class TreeGrowRandom(BaseTreeGrow):
@@ -108,8 +111,10 @@ class TreeGrowRandom(BaseTreeGrow):
         BaseTreeGrow.__init__(self, landscape)
         self.scale = scale
         self.clearance = clearance
-        self.trees = [obj for obj in bpy.data.objects
-                      if obj.name.split('.')[0] in other_trees]
+        # Find existing trees
+        self.trees = [obj for tree in other_trees
+                      for obj in helpers.all_instances(tree)]
+
         # Avoid other objects in the scene
         avoid_objects = [obj for obj in bpy.data.objects
                          if obj.type == "MESH"
@@ -212,14 +217,26 @@ def main():
     parser.add_argument(
         "-c", "--clearance", metavar="DIST", type=float, default=8.,
         help="Clearance between trees (default: 8.0)")
+    parser.add_argument("-o", "--out", metavar="FILE", type=str,
+                        help="Write generated tree locations to file")
     args = parser.parse_args(argv)
 
     # Grow the trees
     grow = TreeGrowRandom(bpy.data.objects[args.landscape], set(args.trees),
                           args.scale, args.clearance)
     numbers = segment(args.number, len(args.trees))
+    tree_types = []
     for tree, number in zip(args.trees, numbers):
-        grow.grow_trees(number, [bpy.data.objects[tree]])
+        tree_types.append(grow.grow_trees(number, [bpy.data.objects[tree]]))
+    if args.out is not None:
+        out = {}
+        for trees in tree_types:
+            key = trees[0].name.split('.')[0]
+            locations = [{"location": x.location, "rotation": x.rotation_euler,
+                          "fixed": True} for x in trees]
+            out[key] = locations
+        with open(args.out, 'w') as file:
+            json.dump(out, file)
 
 if __name__ == "__main__":
     main()
