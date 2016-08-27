@@ -68,7 +68,9 @@ class Generate():
         with open(self.files['trees']) as file:
             trees = json.load(file)
             grower = treegrow.TreeGrow(self.render.landscape, trees)
-            grower.grow_all()
+            trees = grower.grow_all()
+        with open(self.files['trees'], 'w') as file:
+            json.dump(trees, file)
 
     def point(self):
         """Return a random sun and camera setup."""
