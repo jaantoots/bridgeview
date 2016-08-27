@@ -50,7 +50,7 @@ class BaseTreeGrow():
         closest_vertex, _, _ = self.landscape_tree.find(location)
         if (location[2] > closest_vertex[2] - self._dig
                 and location[2] < closest_vertex[2]):
-            return location
+            return np.array(location)
         location[2] = closest_vertex[2] - np.random.uniform(0, self._dig)
         return self._find_height(location)
 
@@ -88,7 +88,8 @@ class TreeGrow(BaseTreeGrow):
             if not location.get("fixed"):
                 # Find appropriate z coordinate at x, y position
                 location["location"][2] = self._init_height
-                location["location"] = self._find_height(location["location"])
+                location["location"] = \
+                    self._find_height(location["location"]).tolist()
                 location["rotation"] = [0, 0, np.random.uniform(0, 2*np.pi)]
                 location["fixed"] = True
             tree.location = location["location"]
@@ -232,7 +233,8 @@ def main():
         out = {}
         for trees in tree_types:
             key = trees[0].name.split('.')[0]
-            locations = [{"location": x.location, "rotation": x.rotation_euler,
+            locations = [{"location": np.array(x.location).tolist(),
+                          "rotation": np.array(x.rotation_euler).tolist(),
                           "fixed": True} for x in trees]
             out[key] = locations
         with open(args.out, 'w') as file:
