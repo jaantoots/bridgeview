@@ -26,7 +26,7 @@ import argparse
 import itertools
 import numpy as np
 import bpy  # pylint: disable=import-error
-import bridge.helpers
+import bridge.helpers as helpers
 
 __doc__ = """Place trees randomly across scene."""
 
@@ -36,9 +36,10 @@ class BaseTreeGrow():
 
     def __init__(self, landscape):
         """Create the landscape tree and set some default values."""
-        self.landscape = landscape
         # Create landscape tree for fast closest point lookup
-        self.landscape_tree = bridge.helpers.landscape_tree(landscape)
+        self.landscape = landscape
+        self.landscape_tree = helpers.landscape_tree(landscape)
+
         # Set some default values
         self._dig = 0.1
         self._init_height = 15
@@ -109,6 +110,12 @@ class TreeGrowRandom(BaseTreeGrow):
         self.clearance = clearance
         self.trees = [obj for obj in bpy.data.objects
                       if obj.name.split('.')[0] in other_trees]
+        # Avoid other objects in the scene
+        avoid_objects = [obj for obj in bpy.data.objects
+                         if obj.type == "MESH"
+                         and obj.name.split('.')[0] not in other_trees]
+        avoid_objects.remove(self.landscape)
+        self.avoid_tree = helpers.avoid_tree(avoid_objects)
 
     def grow_trees(self, number: int, seed_tree: list):
         """Grow trees using last element of seed_tree as a starting point."""
@@ -153,7 +160,14 @@ class TreeGrowRandom(BaseTreeGrow):
         return tree
 
     def _found_clearing(self, location):
-        """Check if any other trees are too close (FU quadratic scaling)."""
+        """Check if any other objects or trees are too close."""
+        # Check with avoid tree
+        closest_landscape, _, _ = self.landscape_tree.find(location)
+        closest_avoid, _, dist = self.avoid_tree.find(location)
+        if closest_avoid[2] > closest_landscape[2] and dist < 2.0:
+            return False
+
+        # Yes, I know... This scales quadratically.
         for tree in self.trees:
             if np.linalg.norm(location - tree.location) < self.clearance:
                 return False
