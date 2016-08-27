@@ -169,8 +169,10 @@ class TreeGrowRandom(BaseTreeGrow):
         """Check if any other objects or trees are too close."""
         # Check with avoid tree
         closest_landscape, _, _ = self.landscape_tree.find(location)
-        closest_avoid, _, dist = self.avoid_tree.find(location)
-        if closest_avoid[2] > closest_landscape[2] and dist < 2.0:
+        closest_avoid, _, _ = self.avoid_tree.find(location)
+        if (closest_avoid[2] > closest_landscape[2]
+                and np.linalg.norm(
+                    np.array(location[:2]) - closest_avoid[:2]) < 2.0):
             return False
 
         # Yes, I know... This scales quadratically.
