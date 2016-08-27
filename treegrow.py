@@ -171,8 +171,8 @@ class TreeGrowRandom(BaseTreeGrow):
         closest_landscape, _, _ = self.landscape_tree.find(location)
         closest_avoid, _, _ = self.avoid_tree.find(location)
         if (closest_avoid[2] > closest_landscape[2]
-                and np.linalg.norm(
-                    np.array(location[:2]) - closest_avoid[:2]) < 2.0):
+                and np.linalg.norm(np.array(location[:2]) - closest_avoid[:2])
+                < self.clearance):
             return False
 
         # Yes, I know... This scales quadratically.
