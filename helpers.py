@@ -30,6 +30,16 @@ def landscape_tree(landscape):
     return tree
 
 
+def avoid_tree(objects):
+    """Return a balanced tree of vertices for find operations."""
+    vertices = [(obj, vert) for obj in objects for vert in obj.data.vertices]
+    tree = mathutils.kdtree.KDTree(len(vertices))
+    for i, vertex in enumerate(vertices):
+        tree.insert(vertex[0].matrix_world * vertex[1].co, i)
+    tree.balance()
+    return tree
+
+
 def bounding_box(obj):
     """Return a bounding box for an object aligned with the global axes."""
     vertices = [obj.matrix_world * vertex.co for vertex in obj.data.vertices]
