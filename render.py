@@ -164,13 +164,20 @@ class Render():
         return focal_length, location.tolist(), rotation.tolist()
 
     def _choose_height(self, location):
+        """Choose height for camera above ground."""
         clearance = self.opts['camera_clearance']
         closest_vertex, _, _ = self.landscape_tree.find(location)
-        if (location[2] > closest_vertex[2] + clearance[0]
-                and location[2] < closest_vertex[2] + clearance[1]):
+        floor = closest_vertex[2]
+        # Optionally, have a set absolute floor configured (e.g. water level)
+        camera_floor = self.opts.get('camera_floor')
+        if camera_floor is not None and camera_floor > floor:
+            floor = camera_floor
+        # Check clearance
+        if (location[2] > floor + clearance[0]
+                and location[2] < floor + clearance[1]):
             return location
-        location[2] = closest_vertex[2] + np.random.uniform(clearance[0],
-                                                            clearance[1])
+        # Set and check new height
+        location[2] = floor + np.random.uniform(clearance[0], clearance[1])
         return self._choose_height(location)
 
     def _check_height(self, location):
