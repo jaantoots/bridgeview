@@ -104,7 +104,7 @@ class Render():
             self.opts['landscape'][0], self.objects)[0]
         self.landscape_tree = helpers.landscape_tree(self.landscape)
 
-        # Remove landscape
+        # Remove landscape for bounding sphere calculation
         for obj_name in self.opts['landscape']:
             for obj in helpers.all_instances(obj_name, self.objects):
                 self.objects.remove(obj)
@@ -272,7 +272,12 @@ class Render():
         bpy.ops.render.render(write_still=True)
 
     def render_semantic(self, path: str):
-        """Render the semantic labels."""
+        """Render the semantic labels.
+
+        WARNING: This will probably screw up any careful configuration
+        for visual renders.
+
+        """
         # Render with Blender engine, disable node tree and anti-aliasing
         bpy.data.scenes[0].render.engine = 'BLENDER_RENDER'
         bpy.data.scenes[0].use_nodes = False
