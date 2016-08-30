@@ -36,6 +36,57 @@ class Render():
     exposure are set from the configuration file with the expectation
     that these might be necessary for finetuning the quality.
 
+    Configuration options:
+
+    landscape (list): List of object names that are not part of the
+        bridge. The first item is used for choosing the camera
+        position. Additional elements are excluded when calculating
+        the bounding sphere automatically. If spheres are provided in
+        a file, additional elements are optional.
+
+    sun_theta (list): Range of sun's polar angle.
+
+    sun_size (float): Size of the sun (sharpness of shadows).
+
+    sun_strength (float): Strength of sunlight (balance with exposure
+        determines relative brightness of sky.
+
+    sun_color (list): RGBA of the color of sunlight (#FFFFF8 seems
+        good and the scene is also influenced by the sky texture which
+        means there is no need to worry about the color too much).
+
+    camera_distance_factor (dict: mean, sigma): Relative camera
+        distance (in terms of bounding sphere radius) is from a
+        Gaussian distribution with given mean and sigma.
+
+    camera_clearance (list or float): Camera clearance above
+        landscape. List is used as a uniform range. Float is used as a
+        lower limit and camera_theta is used otherwise.
+
+    camera_floor (float): Absolute floor (Z position) for the camera
+        position. It might be useful to set this to the water level if
+        applicable.
+
+    camera_lens (dict: mean, log_sigma): Camera lens focal length is
+        drawn from lognormal distribution with the given mean (in mm)
+        and log_sigma.
+
+    camera_theta (list): Range of camera's polar angle. This is only
+        looked at if camera_clearance is not provided or is a float.
+
+    camera_noise (float): Noise to add to the camera angle to increase
+        viewpoint variety.
+
+    resolution (list: x, y): Resolution of rendered images.
+
+    film_exposure (float): Film exposure for visual renders (see note
+        at sun_strength).
+
+    cycles_samples (int): Number of samples to render, higher numbers
+        decrease noise but take longer.
+
+    sky (dict): Sky configuration (see help for set_sky).
+
     """
 
     def __init__(self, objects: list, conf_file=None, spheres_file=None):
@@ -269,7 +320,22 @@ class Render():
             path)
 
     def set_sky(self):
-        """Set sun direction consistent with the sun and randomise clouds."""
+        """Set sun direction consistent with the sun and randomise clouds.
+
+        Configuration options (optional):
+
+        noise_scale (dict: mean, log_sigma): Noise scale for
+            generating clouds is drawn from a lognormal distribution
+            with given mean and log_sigma.
+
+        cloud_ramp (dict: min, max, diff): Clouds are created by
+            ramping the noise: black is drawn between min and max and
+            white is diff away.
+
+        translate (list): Translate the cloud texture randomly within
+            given limits.
+
+        """
         tree = bpy.data.worlds['World'].node_tree
 
         # Set sun direction in sky (angles seem to be correct from testing)
