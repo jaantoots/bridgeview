@@ -245,26 +245,29 @@ class Render():
                     + line['start'])
         location += np.random.randn(3) * self.opts['camera_location_noise']
 
-        while True:
-            # Choose a rotation
-            theta = np.pi/2 + np.random.normal(0, self.opts['camera_sigma'])
-            phi = np.random.uniform(0, 2*np.pi)
-            # Adjust rotation for non-standard axis
-            rotation = np.array([theta, 0, phi - np.pi/2])
-            # Check rotation
-            direction = np.array([np.sin(theta)*np.cos(phi),
-                                  np.sin(theta)*np.sin(phi),
-                                  np.cos(theta)])
-            # Have at least one bounding sphere centre in view
-            for sphere in self.opts['spheres'].values():
-                to_centre = sphere['centre'] - location
-                cos_angle = (np.dot(direction, to_centre)
-                             / np.linalg.norm(to_centre))
-                if np.arccos(cos_angle) < self.camera.data.angle_y/2:
-                    break
-
+        # Choose a rotation
+        rotation = self._choose_rotation(location)
         rotation += np.random.randn(3) * self.opts['camera_noise']
         return focal_length, location.tolist(), rotation.tolist()
+
+    def _choose_rotation(self, location):
+        """Choose a random rotation that has bridge in view."""
+        # Choose a rotation
+        theta = np.pi/2 + np.random.normal(0, self.opts['camera_sigma'])
+        phi = np.random.uniform(0, 2*np.pi)
+        # Adjust rotation for non-standard axis
+        rotation = np.array([theta, 0, phi - np.pi/2])
+        # Check rotation
+        direction = np.array([np.sin(theta)*np.cos(phi),
+                              np.sin(theta)*np.sin(phi),
+                              np.cos(theta)])
+        # Have at least one bounding sphere centre in view
+        for sphere in self.opts['spheres'].values():
+            to_centre = sphere['centre'] - location
+            cos_angle = np.dot(direction, to_centre)/np.linalg.norm(to_centre)
+            if np.arccos(cos_angle) < self.camera.data.angle_y/2:
+                return rotation
+        return self._choose_rotation(location)
 
     def _choose_height(self, location):
         """Choose height for camera above ground."""
