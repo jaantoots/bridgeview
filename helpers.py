@@ -110,3 +110,39 @@ class BoundingSphere():
         self.centre = np.sum(box, axis=0)/8 if centre is None else centre
         self.radius = np.max(np.linalg.norm(box - self.centre, axis=1))
         return {"centre": self.centre, "radius": self.radius}
+
+
+class CameraLine():
+    """Create camera lines for choosing position."""
+
+    def __init__(self, start=None, end=None):
+        """Initialise a line with start and end points (if given)."""
+        self.start = start
+        self.end = end
+        self.name = "CameraLine." + np.random.bytes(4).hex()
+        self.vis = None
+
+    def visualise(self, start=None, end=None):
+        """Visualise theline  by creating it in the scene."""
+        if start is not None:
+            self.start = start
+        if end is not None:
+            self.end = end
+        if self.start is None or self.end is None:
+            raise ValueError("Start and end must be defined")
+        # Delete previous (if exists) and create new
+        bpy.ops.object.select_all(action='DESELECT')
+        if self.vis is not None:
+            self.vis.select = True
+            bpy.ops.object.delete()
+        bpy.ops.mesh.primitive_mesh_add()
+        self.vis = bpy.context.object
+        # Print info for adding to conf files
+        self.vis.name = self.name
+        vert = self.vis.data.vertices
+        vert[0].co = self.start
+        vert[1].co = self.start + np.array([0, 0, 1])
+        vert[2].co = self.end
+        vert[3].co = self.end + np.array([0, 0, 1])
+        print(json.dumps({"start": self.start, "end": self.end}))
+        return self.vis
