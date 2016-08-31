@@ -118,6 +118,9 @@ class Render():
             with open(spheres_file) as file:
                 self.spheres = json.load(file)
 
+        # Load camera lines if provided
+        self.camera_lines = None
+
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
 
@@ -180,8 +183,15 @@ class Render():
             self.opts['camera_lens']['log_sigma'])
         self.camera.data.lens = focal_length
 
+        if self.camera_lines is not None:
+            return self.random_camera_line(focal_length)
+        else:
+            return self.random_camera_sphere(focal_length)
+
+    def random_camera_sphere(self, focal_length):
+        """Choose a camera position around a bounding sphere."""
         # Choose a sphere to render
-        sphere = self.spheres[np.random.choice(list(self.spheres.keys()))]
+        sphere = np.random.choice(list(self.spheres.values()))
 
         # Spherical coordinates of the camera position
         min_distance = sphere['radius'] / np.tan(self.camera.data.angle_y/2)
@@ -211,6 +221,35 @@ class Render():
 
         # Set the camera to face near sphere centre
         rotation = np.array([theta, 0, np.pi + phi])
+        rotation += np.random.randn(3) * self.opts['camera_noise']
+        return focal_length, location.tolist(), rotation.tolist()
+
+    def random_camera_line(self, focal_length):
+        """Choose a camera position randomly on a line."""
+        # Choose a location
+        # TODO: Implement self.camera_lines with points as np arrays
+        line = np.random.choice(list(self.camera_lines.values()))
+        location = ((line['end'] - line['start']) * np.random.random()
+                    + line['start'])
+
+        while True:
+            # Choose a rotation
+            theta = np.pi/2 + np.random.normal(0, self.opts['camera_sigma'])
+            phi = np.random.uniform(0, 2*np.pi)
+            # Adjust rotation for non-standard axis
+            rotation = np.array([theta, 0, phi - np.pi/2])
+            # Check rotation
+            direction = np.array([np.sin(theta)*np.cos(phi),
+                                  np.sin(theta)*np.sin(phi),
+                                  np.cos(theta)])
+            # Have at least one bounding sphere centre in view
+            for sphere in self.spheres.values():
+                to_centre = sphere['centre'] - location
+                cos_angle = (np.dot(direction, to_centre)
+                             / np.linalg.norm(to_centre))
+                if np.arccos(cos_angle) < self.camera.data.angle_y/2:
+                    break
+
         rotation += np.random.randn(3) * self.opts['camera_noise']
         return focal_length, location.tolist(), rotation.tolist()
 
