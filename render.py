@@ -89,8 +89,7 @@ class Render():
 
     """
 
-    def __init__(self, objects: list, conf_file=None, spheres_file=None,
-                 lines_file=None):
+    def __init__(self, objects: list, conf_file=None):
         """Create Render object for specified Blender objects."""
         # Load configuration
         if conf_file is None:
@@ -111,23 +110,16 @@ class Render():
                 self.objects.remove(obj)
 
         # Initialise bounding spheres for camera views
-        if spheres_file is None:
+        if self.opts.get('spheres') is None:
             sphere = helpers.BoundingSphere()
-            self.spheres = {}
-            self.spheres['default'] = sphere.find(self.objects)
-        else:
-            with open(spheres_file) as file:
-                self.spheres = json.load(file)
+            self.opts['spheres'] = {}
+            self.opts['spheres']['default'] = sphere.find(self.objects)
 
-        # Load camera lines if provided
-        self.camera_lines = None
-        if lines_file is not None:
-            with open(lines_file) as file:
-                camera_lines = json.load(file)
-                # Convert points to np.array
-                self.camera_lines = {name: {point: np.array(loc)
-                                            for point, loc in line.items()}
-                                     for name, line in camera_lines}
+        # Convert camera lines if provided
+        if self.opts.get('lines') is not None:
+            self.opts['lines'] = {name: {point: np.array(loc)
+                                         for point, loc in line.items()}
+                                  for name, line in self.opts['lines']}
 
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
@@ -191,7 +183,7 @@ class Render():
             self.opts['camera_lens']['log_sigma'])
         self.camera.data.lens = focal_length
 
-        if self.camera_lines is not None:
+        if self.opts.get('lines') is not None:
             return self.random_camera_line(focal_length)
         else:
             return self.random_camera_sphere(focal_length)
@@ -199,7 +191,7 @@ class Render():
     def random_camera_sphere(self, focal_length):
         """Choose a camera position around a bounding sphere."""
         # Choose a sphere to render
-        sphere = np.random.choice(list(self.spheres.values()))
+        sphere = np.random.choice(list(self.opts['spheres'].values()))
 
         # Spherical coordinates of the camera position
         min_distance = sphere['radius'] / np.tan(self.camera.data.angle_y/2)
@@ -235,7 +227,7 @@ class Render():
     def random_camera_line(self, focal_length):
         """Choose a camera position randomly on a line."""
         # Choose a location
-        line = np.random.choice(list(self.camera_lines.values()))
+        line = np.random.choice(list(self.opts['lines'].values()))
         location = ((line['end'] - line['start']) * np.random.random()
                     + line['start'])
 
@@ -250,7 +242,7 @@ class Render():
                                   np.sin(theta)*np.sin(phi),
                                   np.cos(theta)])
             # Have at least one bounding sphere centre in view
-            for sphere in self.spheres.values():
+            for sphere in self.opts['spheres'].values():
                 to_centre = sphere['centre'] - location
                 cos_angle = (np.dot(direction, to_centre)
                              / np.linalg.norm(to_centre))
