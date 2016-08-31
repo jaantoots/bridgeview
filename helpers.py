@@ -135,7 +135,7 @@ class CameraLine():
         if self.vis is not None:
             self.vis.select = True
             bpy.ops.object.delete()
-        bpy.ops.mesh.primitive_mesh_add()
+        bpy.ops.mesh.primitive_plane_add()
         self.vis = bpy.context.object
         # Print info for adding to conf files
         self.vis.name = self.name
