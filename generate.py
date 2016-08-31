@@ -59,9 +59,8 @@ class Generate():
         self.textures = bridge.textures.Textures(self.objects)
         self.textures.read(self.files['textures'])
         # Render file can be created automatically but probably not
-        # when running, spheres file is optional and defaults to None
-        self.render = bridge.render.Render(self.objects, self.files['render'],
-                                           self.files.get('spheres'))
+        # when running, spheres and lines are in render file
+        self.render = bridge.render.Render(self.objects, self.files['render'])
 
     def grow_trees(self):
         """Grow trees according to the coordinates specified in file."""
