@@ -97,6 +97,9 @@ class Render():
     camera_sigma (float): Sigma of polar angle around horizontal when
         choosing camera rotation using lines (otherwise irrelevant).
 
+    camera_location_noise (float): Noise to add to camera location
+        when using lines (otherwise irrelevant).
+
     """
 
     def __init__(self, objects: list, conf_file=None):
@@ -240,6 +243,7 @@ class Render():
         line = np.random.choice(list(self.opts['lines'].values()))
         location = ((line['end'] - line['start']) * np.random.random()
                     + line['start'])
+        location += np.random.randn(3) * self.opts['camera_location_noise']
 
         while True:
             # Choose a rotation
