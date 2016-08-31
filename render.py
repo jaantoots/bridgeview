@@ -358,10 +358,8 @@ class Render():
         file_output.format.file_format = 'OPEN_EXR'
         file_output.base_path = os.path.dirname(path)
 
-        # Generate random collisionless filename
-        sha = hashlib.sha1()
-        sha.update(np.array(self.camera.location))  # Different for every image
-        digest = sha.hexdigest()
+        # Generate random collisionless filename from location
+        digest = hashlib.sha1(np.array(self.camera.location)).hexdigest()
         file_output.file_slots[0].path = digest + '_'
         bpy.data.scenes[0].render.filepath = os.path.join('/tmp',
                                                           digest + '.png')
