@@ -132,7 +132,7 @@ class Render():
         if self.opts.get('lines') is not None:
             self.opts['lines'] = {name: {point: np.array(loc)
                                          for point, loc in line.items()}
-                                  for name, line in self.opts['lines']}
+                                  for name, line in self.opts['lines'].items()}
 
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
