@@ -87,6 +87,16 @@ class Render():
 
     sky (dict): Sky configuration (see help for set_sky).
 
+    spheres (dict: name, (dict: centre, radius)): Positions of spheres
+        to use for positioning the camera.
+
+    lines (dict: name, (dict: start, end)): Lines to use for choosing
+        camera positions. Most other camera configuration parameters
+        are irrelevant when using this, but camera_sigma is required.
+
+    camera_sigma (float): Sigma of polar angle around horizontal when
+        choosing camera rotation using lines (otherwise irrelevant).
+
     """
 
     def __init__(self, objects: list, conf_file=None):
