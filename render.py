@@ -89,7 +89,8 @@ class Render():
 
     """
 
-    def __init__(self, objects: list, conf_file=None, spheres_file=None):
+    def __init__(self, objects: list, conf_file=None, spheres_file=None,
+                 lines_file=None):
         """Create Render object for specified Blender objects."""
         # Load configuration
         if conf_file is None:
@@ -120,6 +121,13 @@ class Render():
 
         # Load camera lines if provided
         self.camera_lines = None
+        if lines_file is not None:
+            with open(lines_file) as file:
+                camera_lines = json.load(file)
+                # Convert points to np.array
+                self.camera_lines = {name: {point: np.array(loc)
+                                            for point, loc in line.items()}
+                                     for name, line in camera_lines}
 
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
@@ -227,7 +235,6 @@ class Render():
     def random_camera_line(self, focal_length):
         """Choose a camera position randomly on a line."""
         # Choose a location
-        # TODO: Implement self.camera_lines with points as np arrays
         line = np.random.choice(list(self.camera_lines.values()))
         location = ((line['end'] - line['start']) * np.random.random()
                     + line['start'])
