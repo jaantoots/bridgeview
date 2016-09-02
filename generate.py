@@ -86,6 +86,9 @@ class Generate():
         create images.
 
         """
+        # Grow trees if file is provided
+        if self.files.get('trees') is not None:
+            self.grow_trees()
         # If output file is not empty, load points, otherwise generate points
         out_path = self.files['out']
         if os.path.getsize(out_path):
@@ -170,9 +173,6 @@ def main():
     parser.add_argument(
         "-l", "--all-levels", action='store_true',
         help="Generate all levels of semantic labels (default only level 2).")
-    parser.add_argument(
-        "-t", "--grow-trees", action="store_true",
-        help="Place trees to specified coordinates, requires existing file.")
     args = parser.parse_args(argv)
 
     # Paths
@@ -196,8 +196,6 @@ def main():
         files[key] = os.path.join(path, os.path.basename(files[key]))
 
     gen = Generate(path, files)
-    if args.grow_trees:
-        gen.grow_trees()
     gen.run(args.size, args.all_levels)
     print()
 
