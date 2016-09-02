@@ -78,7 +78,7 @@ class Generate():
         return {'sun_rotation': sun_rotation, 'camera_lens': lens,
                 'camera_location': location, 'camera_rotation': rotation}
 
-    def run(self, size: int=1, all_levels: bool=False):
+    def run(self, size: int=1, all_levels: bool=False, gpu: bool=False):
         """Generate the data, `size` sets of visual images and labels.
 
         If data output file already exists, only create missing images
@@ -112,7 +112,7 @@ class Generate():
             self.render.place_camera(point['camera_lens'],
                                      point['camera_location'],
                                      point['camera_rotation'])
-            self.render.render(path)
+            self.render.render(path, gpu)
 
         print("==Render semantic labels==")
         levels = range(3) if all_levels else [2]
@@ -137,7 +137,7 @@ class Generate():
             self.render.place_camera(point['camera_lens'],
                                      point['camera_location'],
                                      point['camera_rotation'])
-            self.render.render_depth(path)
+            self.render.render_depth(path, gpu)
 
 
 def clean_scene():
@@ -173,6 +173,9 @@ def main():
     parser.add_argument(
         "-l", "--all-levels", action='store_true',
         help="Generate all levels of semantic labels (default only level 2).")
+    parser.add_argument(
+        "-g", "--gpu", action="store_true",
+        help="Use GPU for visual and depth rendering")
     args = parser.parse_args(argv)
 
     # Paths
@@ -196,7 +199,7 @@ def main():
         files[key] = os.path.join(path, os.path.basename(files[key]))
 
     gen = Generate(path, files)
-    gen.run(args.size, args.all_levels)
+    gen.run(args.size, args.all_levels, args.gpu)
     print()
 
 if __name__ == "__main__":
