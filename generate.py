@@ -11,11 +11,11 @@ shift
 if [ "$(uname)" == "Darwin" ]; then
     # Verbose env for Mac OS X
     exec $(which env) -v PYTHONPATH=":$PYTHONPATH" blender "$model" \
-        --background --factory-startup --python "$0" -- "$@"
+        --background --python "$0" -- "$@"
 else
     # Unfortunately Linux doesn't have this flag
     exec $(which env) PYTHONPATH=":$PYTHONPATH" blender "$model" \
-        --background --factory-startup --python "$0" -- "$@"
+        --background --python "$0" -- "$@"
 fi
 
 exit 127
@@ -78,7 +78,8 @@ class Generate():
         return {'sun_rotation': sun_rotation, 'camera_lens': lens,
                 'camera_location': location, 'camera_rotation': rotation}
 
-    def run(self, size: int=1, all_levels: bool=False, gpu: bool=False):
+    def run(self, size: int=1, all_levels: bool=False, gpu: bool=False,
+            render: list=None):
         """Generate the data, `size` sets of visual images and labels.
 
         If data output file already exists, only create missing images
@@ -89,6 +90,7 @@ class Generate():
         # Grow trees if file is provided
         if self.files.get('trees') is not None:
             self.grow_trees()
+
         # If output file is not empty, load points, otherwise generate points
         out_path = self.files['out']
         if os.path.getsize(out_path):
@@ -101,43 +103,50 @@ class Generate():
             with open(out_path, 'w') as file:
                 json.dump(data, file)
 
-        print("==Render visual images==")
-        for seq, point in data.items():
-            path = os.path.join(self.path, "{:s}.vis.png".format(seq))
-            if os.path.isfile(path):
-                continue
-            self.textures.texture()
-            self.render.displace_landscape()
-            self.render.place_sun(point['sun_rotation'])
-            self.render.place_camera(point['camera_lens'],
-                                     point['camera_location'],
-                                     point['camera_rotation'])
-            self.render.render(path, gpu)
+        # Check which renders to do and default to all
+        if render is None:
+            render = ["visual", "semantic", "depth"]
 
-        print("==Render semantic labels==")
-        levels = range(3) if all_levels else [2]
-        for level in levels:
-            # Only change materials once per level for efficiency
-            self.labels.color_level(level)
+        if "visual" in render:
+            print("==Render visual images==")
             for seq, point in data.items():
-                path = os.path.join(self.path,
-                                    "{:s}.sem.{:d}.png".format(seq, level))
+                path = os.path.join(self.path, "{:s}.vis.png".format(seq))
+                if os.path.isfile(path):
+                    continue
+                self.textures.texture()
+                self.render.displace_landscape()
+                self.render.place_sun(point['sun_rotation'])
+                self.render.place_camera(point['camera_lens'],
+                                         point['camera_location'],
+                                         point['camera_rotation'])
+                self.render.render(path, gpu)
+
+        if "semantic" in render:
+            print("==Render semantic labels==")
+            levels = range(3) if all_levels else [2]
+            for level in levels:
+                # Only change materials once per level for efficiency
+                self.labels.color_level(level)
+                for seq, point in data.items():
+                    path = os.path.join(self.path,
+                                        "{:s}.sem.{:d}.png".format(seq, level))
+                    if os.path.isfile(path):
+                        continue
+                    self.render.place_camera(point['camera_lens'],
+                                             point['camera_location'],
+                                             point['camera_rotation'])
+                    self.render.render_semantic(path)
+
+        if "depth" in render:
+            print("==Render depth==")
+            for seq, point in data.items():
+                path = os.path.join(self.path, "{:s}.dep.exr".format(seq))
                 if os.path.isfile(path):
                     continue
                 self.render.place_camera(point['camera_lens'],
                                          point['camera_location'],
                                          point['camera_rotation'])
-                self.render.render_semantic(path)
-
-        print("==Render depth==")
-        for seq, point in data.items():
-            path = os.path.join(self.path, "{:s}.dep.exr".format(seq))
-            if os.path.isfile(path):
-                continue
-            self.render.place_camera(point['camera_lens'],
-                                     point['camera_location'],
-                                     point['camera_rotation'])
-            self.render.render_depth(path, gpu)
+                self.render.render_depth(path, gpu)
 
 
 def clean_scene():
@@ -173,9 +182,12 @@ def main():
     parser.add_argument(
         "-l", "--all-levels", action='store_true',
         help="Generate all levels of semantic labels (default only level 2).")
+    parser.add_argument("-g", "--gpu", action="store_true",
+                        help="Use GPU for visual and depth rendering")
     parser.add_argument(
-        "-g", "--gpu", action="store_true",
-        help="Use GPU for visual and depth rendering")
+        "-r", "--render", metavar="TYPE", nargs="*",
+        help="Render only given types; possible options: \"visual\", "
+        "\"semantic\", \"depth\" (default all)")
     args = parser.parse_args(argv)
 
     # Paths
@@ -199,7 +211,7 @@ def main():
         files[key] = os.path.join(path, os.path.basename(files[key]))
 
     gen = Generate(path, files)
-    gen.run(args.size, args.all_levels, args.gpu)
+    gen.run(args.size, args.all_levels, args.gpu, args.render)
     print()
 
 if __name__ == "__main__":
