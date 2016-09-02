@@ -308,7 +308,7 @@ class Render():
         self.camera.location = location
         return self.camera
 
-    def render(self, path: str):
+    def render(self, path: str, gpu: bool=False):
         """Render the visual scene.
 
         Should be run before other types of rendering as some detailed
@@ -321,6 +321,8 @@ class Render():
         """
         # Render with Cycles engine
         bpy.data.scenes[0].render.engine = 'CYCLES'
+        if gpu:
+            bpy.data.scenes[0].cycles.device = 'GPU'
         bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
         bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
         bpy.data.scenes[0].render.filepath = path
@@ -341,7 +343,7 @@ class Render():
         bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)
 
-    def render_depth(self, path: str):
+    def render_depth(self, path: str, gpu: bool=False):
         """Render depth.
 
         WARNING: This will clear the scene node tree. Any custom
@@ -350,6 +352,8 @@ class Render():
 
         """
         bpy.data.scenes[0].render.engine = 'CYCLES'
+        if gpu:
+            bpy.data.scenes[0].cycles.device = 'GPU'
         # Use Compositing nodes for Scene
         bpy.data.scenes[0].use_nodes = True
         tree = bpy.data.scenes[0].node_tree
