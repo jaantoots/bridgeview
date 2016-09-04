@@ -181,9 +181,11 @@ def main():
                         help="Number of images to generate (default: 4)")
     parser.add_argument(
         "-l", "--all-levels", action='store_true',
-        help="Generate all levels of semantic labels (default only level 2).")
+        help="Generate all levels of semantic labels (default only level 2)")
     parser.add_argument("-g", "--gpu", action="store_true",
                         help="Use GPU for visual and depth rendering")
+    parser.add_argument("-f", "--force-cuda", metavar="DEVICE",
+                        help="Use given CUDA compute device")
     parser.add_argument(
         "-r", "--render", metavar="TYPE", nargs="*",
         help="Render only given types; possible options: \"visual\", "
@@ -211,6 +213,9 @@ def main():
         files[key] = os.path.join(path, os.path.basename(files[key]))
 
     gen = Generate(path, files)
+    if args.force_cuda is not None:
+        bpy.context.user_preferences.system.compute_device_type = 'CUDA'
+        bpy.context.user_preferences.system.compute_device = args.force_cuda
     gen.run(args.size, args.all_levels, args.gpu, args.render)
     print()
 
