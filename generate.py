@@ -195,7 +195,7 @@ def main():
     if args.name is None:
         subpath += datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     else:
-        subpath += datetime.date.today().strftime('%Y-%m-%d-') + args.name
+        subpath += args.name
     path = os.path.abspath(subpath)
 
     # Copy files into path
