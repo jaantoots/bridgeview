@@ -137,12 +137,13 @@ class CameraLine():
             bpy.ops.object.delete()
         bpy.ops.mesh.primitive_plane_add()
         self.vis = bpy.context.object
-        # Print info for adding to conf files
         self.vis.name = self.name
+        self.vis.location = self.start
         vert = self.vis.data.vertices
-        vert[0].co = self.start
-        vert[1].co = self.start + np.array([0, 0, 1])
-        vert[2].co = self.end
-        vert[3].co = self.end + np.array([0, 0, 1])
+        vert[0].co = [0, 0, 0]
+        vert[1].co = np.array(vert[0].co) + np.array([0, 0, 1])
+        vert[2].co = np.array(self.end) - np.array(self.start)
+        vert[3].co = np.array(vert[2].co) + np.array([0, 0, 1])
+        # Print info for adding to conf files
         print(json.dumps({"start": self.start, "end": self.end}))
         return self.vis
