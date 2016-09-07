@@ -1,4 +1,5 @@
 #!/bin/bash
+# -*- mode: python;-*-
 "true" '''\'
 model=$1
 shift
