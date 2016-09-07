@@ -25,27 +25,26 @@ pip3 install -r requirements.txt
 pip install -r requirements2.txt
 ```
 
-Assuming `blender` is in `$PATH`, scripts can be run as is (a model
-file needs to be given):
+Assuming `blender` is in `PATH`, scripts can be run
+normally. Otherwise, if for some reason having `blender` in `PATH` is
+not possible, provide the executable as an environment variable
+`BLENDER=/path/to/blender` (conversely, this should normally be
+unset).
+
+Help is available for the scripts (a model file needs to be given):
 
 ```
 ./generate.py MODEL --help
 ./treegrow.py MODEL --help
 ```
 
-Otherwise, as Blender needs to be told to look for modules in the
-working directory (`path-to-blender` needs to be provided if `blender`
-is not in `$PATH`):
+Blender normally uses its internal Python but this does not find
+packages in the working directory nor custom dependencies. For this
+reason, use the local script for launching Blender when working on
+model files or debugging: `./blender ...`.
+
+For example, help for modules is then also available as:
 
 ```
-source set-blender.(sh|zsh) [path-to-blender]
+./blender --background --python FILE -- --help
 ```
-
-Help for modules is then available as:
-
-```
-blender --background --python FILE -- --help
-```
-
-Sourcing the files to alias `blender` is also useful for using the
-`bridge` package when setting up the model files.

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+help=$(cat <<EOF
+error: blender not in PATH
+
+Add Blender executable to PATH, or provide an environment variable:
+BLENDER=/path/to/blender
+
+EOF
+    )
+
+[[ -z "$BLENDER" ]] && BLENDER=blender && [[ -z "$(which blender)" ]] \
+    && echo "$help" 1>&2 && exit 1
+
+PYTHONPATH=":$(python3 -c 'import sys; print(*sys.path, sep=":")')"
+export PYTHONPATH
+
+exec $BLENDER "$@"
