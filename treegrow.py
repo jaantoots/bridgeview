@@ -27,7 +27,7 @@ import argparse
 import itertools
 import numpy as np
 import bpy  # pylint: disable=import-error
-import bridge.helpers as helpers
+import render.helpers as helpers
 
 __doc__ = """Place trees randomly across scene."""
 

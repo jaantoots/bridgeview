@@ -27,7 +27,7 @@ import datetime
 import json
 import argparse
 import bpy  # pylint: disable=import-error
-import bridge
+import render
 import treegrow
 
 __doc__ = """Run this script with model to generate data.
@@ -54,13 +54,13 @@ class Generate():
         self.files = files
 
         # Initialise objects with configurations from files
-        self.labels = bridge.labels.Labels(self.objects)
+        self.labels = render.labels.Labels(self.objects)
         self.labels.read(self.files['labels'])
-        self.textures = bridge.textures.Textures(self.objects)
+        self.textures = render.textures.Textures(self.objects)
         self.textures.read(self.files['textures'])
         # Render file can be created automatically but probably not
         # when running, spheres and lines are in render file
-        self.render = bridge.render.Render(self.objects, self.files['render'])
+        self.render = render.render.Render(self.objects, self.files['render'])
 
     def grow_trees(self):
         """Grow trees according to the coordinates specified in file."""
@@ -79,7 +79,7 @@ class Generate():
                 'camera_location': location, 'camera_rotation': rotation}
 
     def run(self, size: int=1, all_levels: bool=False, gpu: bool=False,
-            render: list=None):
+            render_type: list=None):
         """Generate the data, `size` sets of visual images and labels.
 
         If data output file already exists, only create missing images
@@ -104,10 +104,10 @@ class Generate():
                 json.dump(data, file)
 
         # Check which renders to do and default to all
-        if render is None:
-            render = ["visual", "semantic", "depth"]
+        if render_type is None:
+            render_type = ["visual", "semantic", "depth"]
 
-        if "visual" in render:
+        if "visual" in render_type:
             print("==Render visual images==")
             for seq, point in data.items():
                 path = os.path.join(self.path, "{:s}.vis.png".format(seq))
@@ -121,7 +121,7 @@ class Generate():
                                          point['camera_rotation'])
                 self.render.render(path, gpu)
 
-        if "semantic" in render:
+        if "semantic" in render_type:
             print("==Render semantic labels==")
             levels = range(3) if all_levels else [2]
             for level in levels:
@@ -137,7 +137,7 @@ class Generate():
                                              point['camera_rotation'])
                     self.render.render_semantic(path)
 
-        if "depth" in render:
+        if "depth" in render_type:
             print("==Render depth==")
             for seq, point in data.items():
                 path = os.path.join(self.path, "{:s}.dep.exr".format(seq))
