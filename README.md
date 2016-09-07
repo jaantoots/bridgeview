@@ -48,3 +48,8 @@ For example, help for modules is then also available as:
 ```
 ./blender --background --python FILE -- --help
 ```
+
+## License
+
+This project is licensed under the terms of the
+[MIT license](LICENSE.md).
