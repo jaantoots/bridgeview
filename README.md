@@ -1,15 +1,20 @@
 # Rendering and data generation
 
-This contains the porcelain methods for data generation and links to
-other necessary directories.
+This contains the methods for data generation.
 
 - `generate.py` is used for all data generation
 - Configuration files (in JSON) are required for data generation (see
-  `bridge` package and examples in `models`)
+  `render` package help and examples in `models`)
 - It is possible to add trees randomly or from a file using
   `treegrow.py`
-- `exrconvert.py` is useful for converting depth images from OpenEXR
+- `exrconvert.py` can be used for converting depth images from OpenEXR
   to plain text (needs Python2 due to dependencies)
+
+The `render` package provides the plumbing methods using Blender. Main
+functionality is rendering the visual, semantic and depth scenes as
+implemented in `render/render.py`.  Additional useful modules for
+quickly defining labels and multiple textures for objects and
+procedural modifications are provided.
 
 ## Usage
 
