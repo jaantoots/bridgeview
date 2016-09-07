@@ -1,22 +1,9 @@
 #!/bin/bash
 "true" '''\'
-[ -z "$(which blender)" ] \
-    && echo "blender not found: run the script manually" && exit 1
-
-PYTHONPATH=$(python3 -c 'import sys; print(*sys.path, sep=":")')
-
 model=$1
 shift
 
-if [ "$(uname)" == "Darwin" ]; then
-    # Verbose env for Mac OS X
-    exec $(which env) -v PYTHONPATH=":$PYTHONPATH" blender "$model" \
-        --python "$0" -- "$@"
-else
-    # Unfortunately Linux doesn't have this flag
-    exec $(which env) PYTHONPATH=":$PYTHONPATH" blender "$model" \
-        --python "$0" -- "$@"
-fi
+exec ./blender "$model" --background --python "$0" -- "$@"
 
 exit 127
 '''
@@ -203,7 +190,7 @@ def main():
 
     # Parse arguments
     prog_text = "( {0:s} MODEL | blender MODEL --python {0:s} -- )".format(
-        os.path.relpath(__file__))
+        os.path.relpath(os.path.realpath(__file__)))
     parser = argparse.ArgumentParser(
         prog=prog_text, formatter_class=argparse.RawDescriptionHelpFormatter,
         description=__doc__, epilog="===")
