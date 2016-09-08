@@ -85,6 +85,14 @@ class Render():
     cycles_samples (int): Number of samples to render, higher numbers
         decrease noise but take longer.
 
+    clamp_indirect (float): Limit speckles caused by high intensity
+        reflections. If this is set to 0 (disables), get random white
+        pixels due to noisy reflections.
+
+    compositing_mist (float): Mist intensity, from no mist to
+        completely white surroundings at some distance. Conservative
+        values are recommended.
+
     sky (dict): Sky configuration (see help for set_sky).
 
     spheres (dict: name, (dict: centre, radius)): Positions of spheres
@@ -153,6 +161,8 @@ class Render():
         self.opts['resolution'] = [512, 512]  # [x, y] pixels
         self.opts['film_exposure'] = 2  # Balances with sun strength and sky
         self.opts['cycles_samples'] = 64  # Increase to reduce noise
+        self.opts['clamp_indirect'] = 0.8  # Limit reflections speckles
+        self.opts['compositing_mist'] = 0.04  # Mist intensity
         self.opts['sky'] = {}  # Several possibilities here, see set_sky(
 
     def write_conf(self, conf_file: str):
@@ -325,6 +335,25 @@ class Render():
             bpy.data.scenes[0].cycles.device = 'GPU'
         bpy.data.scenes[0].cycles.film_exposure = self.opts['film_exposure']
         bpy.data.scenes[0].cycles.samples = self.opts['cycles_samples']
+        if self.opts.get('clamp_indirect') is not None:
+            bpy.data.scenes[0].cycles.sample_clamp_indirect = \
+                self.opts['clamp_indirect']
+        if self.opts.get('compositing_mist') is not None:
+            bpy.data.scenes[0].render.layers[0].use_pass_mist = True
+            bpy.data.scenes[0].use_nodes = True
+            tree = bpy.data.scenes[0].node_tree
+            tree.nodes.clear()
+            tree.links.clear()
+            render_layers = tree.nodes.new('CompositorNodeRLayers')
+            output = tree.nodes.new('CompositorNodeComposite')
+            screen = tree.nodes.new('CompositorNodeMixRGB')
+            screen.blend_type = 'SCREEN'
+            map = tree.nodes.new('CompositorNodeMapValue')
+            map.size[0] = self.opts['compositing_mist']
+            tree.links.new(render_layers.outputs['Image'], screen.inputs[1])
+            tree.links.new(render_layers.outputs['Mist'], map.inputs['Value'])
+            tree.links.new(map.outputs['Value'], screen.inputs[0])
+            tree.links.new(screen.outputs['Image'], output.inputs['Image'])
         bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)
 
