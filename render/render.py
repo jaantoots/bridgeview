@@ -139,6 +139,10 @@ class Render():
         default_file = os.path.join(os.path.dirname(__file__), 'render.json')
         with open(default_file) as file:
             defaults = json.load(file)
+        # This guarantees that all parameters exist. Only need to test
+        # for existence of "spheres" and "lines" in opts as these can
+        # genuinely be expected to be unset since that determines how
+        # camera positions are generated.
         for key, value in defaults.items():
             if self.opts.get(key) is None:
                 self.opts[key] = value
@@ -192,7 +196,7 @@ class Render():
             np.log(self.opts['camera_lens']['mean']),
             self.opts['camera_lens']['log_sigma'])
         self.camera.data.lens = focal_length
-
+        # Two major approaches to placing the camera
         if self.opts.get('lines') is not None:
             return self.random_camera_line(focal_length)
         else:
@@ -202,33 +206,20 @@ class Render():
         """Choose a camera position around a bounding sphere."""
         # Choose a sphere to render
         sphere = np.random.choice(list(self.opts['spheres'].values()))
-
         # Spherical coordinates of the camera position
         min_distance = sphere['radius'] / np.tan(self.camera.data.angle_y/2)
-        while True:
-            distance = min_distance * np.random.normal(
-                self.opts['camera_distance_factor']['mean'],
-                self.opts['camera_distance_factor']['sigma'])
-            if (isinstance(self.opts.get('camera_clearance'), list)
-                    or self.opts.get('camera_theta') is None):
-                theta = np.pi/2
-            else:
-                theta = np.random.uniform(self.opts['camera_theta'][0],
-                                          self.opts['camera_theta'][1])
-            phi = np.random.uniform(0, 2*np.pi)
-            # Location axes rotated due to default camera orientation
-            location = sphere['centre'] + distance * np.array(
-                [np.sin(theta)*np.sin(-phi),
-                 np.sin(theta)*np.cos(phi),
-                 np.cos(theta)])
-            # Check if above landscape by at least specified amount
-            if isinstance(self.opts.get('camera_clearance'), list):
-                location = self._choose_height(location)
-                break
-            else:
-                if self._check_height(location):
-                    break
-
+        distance = min_distance * np.random.normal(
+            self.opts['camera_distance_factor']['mean'],
+            self.opts['camera_distance_factor']['sigma'])
+        theta = np.pi/2
+        phi = np.random.uniform(0, 2*np.pi)
+        # Location axes rotated due to default camera orientation
+        location = sphere['centre'] + distance * np.array(
+            [np.sin(theta)*np.sin(-phi),
+             np.sin(theta)*np.cos(phi),
+             np.cos(theta)])
+        # Place above landscape by specified amount
+        location = self._choose_height(location)
         # Set the camera to face near sphere centre
         rotation = np.array([theta, 0, np.pi + phi])
         rotation += np.random.randn(3) * self.opts['camera_noise']
@@ -241,7 +232,6 @@ class Render():
         location = ((line['end'] - line['start']) * np.random.random()
                     + line['start'])
         location += np.random.randn(3) * self.opts['camera_location_noise']
-
         # Choose a rotation
         rotation = self._choose_rotation(location)
         rotation += np.random.randn(3) * self.opts['camera_noise']
@@ -254,11 +244,10 @@ class Render():
         phi = np.random.uniform(0, 2*np.pi)
         # Adjust rotation for non-standard axis
         rotation = np.array([theta, 0, phi - np.pi/2])
-        # Check rotation
+        # Use rotation if it has at least one bounding sphere centre in view
         direction = np.array([np.sin(theta)*np.cos(phi),
                               np.sin(theta)*np.sin(phi),
                               np.cos(theta)])
-        # Have at least one bounding sphere centre in view
         for sphere in self.opts['spheres'].values():
             to_centre = sphere['centre'] - location
             cos_angle = np.dot(direction, to_centre)/np.linalg.norm(to_centre)
@@ -282,16 +271,6 @@ class Render():
         # Set and check new height
         location[2] = floor + np.random.uniform(clearance[0], clearance[1])
         return self._choose_height(location)
-
-    def _check_height(self, location):
-        """Check that camera is above ground and not too high."""
-        closest_vertex, _, _ = self.landscape_tree.find(location)
-        # Not breaking backwards compatibility when no clearance given
-        if (self.opts.get('camera_clearance') is not None and
-                location[2] > closest_vertex[2]
-                + self.opts['camera_clearance']):
-            return True
-        return False
 
     def place_camera(self, focal_length=None, location=None, rotation=None):
         """Place the camera at specified location and rotation."""
