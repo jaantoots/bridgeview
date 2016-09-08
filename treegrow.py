@@ -4,7 +4,7 @@
 model=$1
 shift
 
-exec ./blender "$model" --background --python "$0" -- "$@"
+exec ./blender "$model" --python "$0" -- "$@"
 
 exit 127
 '''
