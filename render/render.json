@@ -48,6 +48,7 @@
     },
     "camera_sigma": 0.26,
     "camera_location_noise": 0.1,
+    "camera_clip_end": 100000,
     "resolution": [
         512,
         512

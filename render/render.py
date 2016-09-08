@@ -8,18 +8,6 @@ import bpy  # pylint: disable=import-error
 from . import helpers
 
 
-def new_camera(resolution: list):
-    """Add a camera to the scene and set the resolution for rendering."""
-    bpy.ops.object.camera_add()
-    camera = bpy.context.object
-    bpy.data.scenes[0].camera = camera
-    bpy.data.scenes[0].render.resolution_x = resolution[0]
-    bpy.data.scenes[0].render.resolution_y = resolution[1]
-    bpy.data.scenes[0].render.resolution_percentage = 100
-    camera.data.clip_end = 1e5  # Maybe set dynamically if ground plane larger
-    return camera
-
-
 class Render():
     """Configure and render the scene.
 
@@ -143,8 +131,8 @@ class Render():
                                   for name, line in self.opts['lines'].items()}
 
         # Initialise things
-        self.sun = None
-        self.camera = new_camera(self.opts['resolution'])
+        self.sun = self.new_sun()
+        self.camera = self.new_camera()
 
     def _default(self):
         """Read default configuration parameters if not given."""
@@ -160,6 +148,17 @@ class Render():
         with open(conf_file, 'w') as file:
             json.dump(self.opts, file)
 
+    def new_sun(self):
+        """Add a new sun to the scene and set its parameters."""
+        bpy.ops.object.lamd_add(type='SUN')
+        sun = bpy.context.object
+        # Set the parameters
+        sun.data.shadow_soft_size = self.opts['sun_size']
+        emission = sun.data.node_tree.nodes['Emission']
+        emission.inputs['Strength'].default_value = self.opts['sun_strength']
+        emission.inputs['Color'].default_value = self.opts['sun_color']
+        return sun
+
     def random_sun(self):
         """Generate a random rotation for the sun."""
         theta = np.random.uniform(self.opts['sun_theta'][0],
@@ -168,25 +167,23 @@ class Render():
         return [theta, 0, phi]
 
     def place_sun(self, rotation=None):
-        """Delete previous sun and create new at specified angle."""
-        bpy.ops.object.select_all(action='DESELECT')
-        if self.sun is not None:
-            self.sun.select = True
-            bpy.ops.object.delete()
-
+        """Place the sun at specified angle."""
         if rotation is None:
             rotation = self.random_sun()
-        bpy.ops.object.lamp_add(type='SUN', location=(0, 0, 20),
-                                rotation=rotation)
-        self.sun = bpy.context.object
-
-        # Set size, strength and sky
-        self.sun.data.shadow_soft_size = self.opts['sun_size']
-        emission = self.sun.data.node_tree.nodes['Emission']
-        emission.inputs['Strength'].default_value = self.opts['sun_strength']
-        emission.inputs['Color'].default_value = self.opts['sun_color']
-        self.set_sky()  # Set sun direction and random clouds
+        self.sun.rotation_euler = rotation
+        self.set_sky()  # Set sun direction and randomise clouds
         return self.sun
+
+    def new_camera(self):
+        """Add a camera to the scene and set the resolution for rendering."""
+        bpy.ops.object.camera_add()
+        camera = bpy.context.object
+        bpy.data.scenes[0].camera = camera
+        bpy.data.scenes[0].render.resolution_x = self.opts['resolution'][0]
+        bpy.data.scenes[0].render.resolution_y = self.opts['resolution'][1]
+        bpy.data.scenes[0].render.resolution_percentage = 100
+        camera.data.clip_end = self.opts['camera_clip_end']
+        return camera
 
     def random_camera(self):
         """Generate a random camera position with the objects in view."""
@@ -300,7 +297,6 @@ class Render():
         """Place the camera at specified location and rotation."""
         if focal_length is None:
             focal_length, location, rotation = self.random_camera()
-
         # Position and face centre
         self.camera.data.lens = focal_length
         self.camera.location = np.zeros(3)
