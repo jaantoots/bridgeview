@@ -113,11 +113,11 @@ class Render():
     def __init__(self, objects: list, conf_file=None):
         """Create Render object for specified Blender objects."""
         # Load configuration
-        if conf_file is None:
-            self._default()
-        else:
+        self.opts = {}
+        if conf_file is not None:
             with open(conf_file) as file:
                 self.opts = json.load(file)
+        self._default()
 
         # Initialise objects, terrain should be the first item in landscape
         self.objects = objects[:]
@@ -138,35 +138,25 @@ class Render():
 
         # Convert camera lines if provided
         if self.opts.get('lines') is not None:
-            self.opts['lines'] = {name: {point: np.array(loc)
-                                         for point, loc in line.items()}
+            self.opts['lines'] = {name: {point: np.array(coords)
+                                         for point, coords in line.items()}
                                   for name, line in self.opts['lines'].items()}
 
+        # Initialise things
         self.sun = None
         self.camera = new_camera(self.opts['resolution'])
 
     def _default(self):
-        """Default configuration parameters."""
-        self.opts = {}
-        self.opts['landscape'] = ["Landscape"]  # Parts not part of the bridge
-        self.opts['sun_theta'] = [0, 17/18 * np.pi/2]  # Higher than 5 deg
-        self.opts['sun_size'] = 0.02  # Realistic sun is smaller than default
-        self.opts['sun_strength'] = 8  # Good starting point
-        self.opts['sun_color'] = [1.0, 1.0, 251/255, 1.0]  # High noon sun
-        self.opts['camera_distance_factor'] = {"mean": 4/12, "sigma": 1/12}
-        self.opts['camera_clearance'] = [1.5, 2.3]  # Distance above landscape
-        self.opts['camera_lens'] = {"mean": 16, "log_sigma": 1/4}
-        self.opts['camera_theta'] = [np.pi/3, 17/18 * np.pi/2]  # Not too high
-        self.opts['camera_noise'] = 0.01  # Rotation sigma [x, y, z] or float
-        self.opts['resolution'] = [512, 512]  # [x, y] pixels
-        self.opts['film_exposure'] = 2  # Balances with sun strength and sky
-        self.opts['cycles_samples'] = 64  # Increase to reduce noise
-        self.opts['clamp_indirect'] = 0.8  # Limit reflections speckles
-        self.opts['compositing_mist'] = 0.04  # Mist intensity
-        self.opts['sky'] = {}  # Several possibilities here, see set_sky(
+        """Read default configuration parameters if not given."""
+        default_file = os.path.join(os.path.dirname(__file__), 'render.json')
+        with open(default_file) as file:
+            defaults = json.load(file)
+        for key, value in defaults.items():
+            if self.opts.get(key) is None:
+                self.opts[key] = value
 
     def write_conf(self, conf_file: str):
-        """Write current configuration to conf_file."""
+        """Write current configuration to file."""
         with open(conf_file, 'w') as file:
             json.dump(self.opts, file)
 
