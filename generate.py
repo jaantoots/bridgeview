@@ -179,6 +179,8 @@ def main():
         "-r", "--render", metavar="TYPE", nargs="*",
         help="Render only given types; possible options: \"visual\", "
         "\"semantic\", \"depth\" (default all)")
+    parser.add_argument("-m", "--materials", metavar="FILE",
+                        help="Link materials from given library file.")
     args = parser.parse_args(argv)
 
     # Paths
@@ -208,6 +210,11 @@ def main():
         bpy.context.user_preferences.system.compute_device_type = 'CUDA'
         if len(args.gpu) > 0:
             bpy.context.user_preferences.system.compute_device = args.gpu
+    # Link materials library if specified
+    if args.materials is not None:
+        with bpy.data.libraries.load(
+                args.materials, link=True, relative=True) as (src, dest):
+            dest.materials = src.materials
     # Generate data
     gen = Generate(path, files)
     gen.run(args.size, args.all_levels, gpu, args.render)
