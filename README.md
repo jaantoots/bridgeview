@@ -18,7 +18,10 @@ procedural modifications are provided.
 
 ## Usage
 
-Install all necessary packages:
+[Blender](https://www.blender.org/) must be installed and it is
+recommended to have it in `PATH`.
+
+Install dependencies:
 
 ```
 pip3 install -r requirements.txt
@@ -51,5 +54,17 @@ For example, help for modules is then also available as:
 
 ## License
 
-This project is licensed under the terms of the
-[MIT license](LICENSE.md).
+Copyright (C) 2016  Jaan Toots
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
