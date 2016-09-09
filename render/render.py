@@ -179,7 +179,6 @@ class Render():
         if rotation is None:
             rotation = self.random_sun()
         self.sun.rotation_euler = rotation
-        # TODO: method is very specific to the node tree used in models
         self.set_sky()  # Set sun direction and randomise clouds
         return self.sun
 
@@ -404,27 +403,27 @@ class Render():
 
         """
         tree = bpy.data.worlds['World'].node_tree
-
         # Set sun direction in sky (angles seem to be correct from testing)
         theta = self.sun.rotation_euler[0]
         phi = self.sun.rotation_euler[2]
-        tree.nodes['Sky Texture'].sun_direction = [np.sin(theta)*np.sin(phi),
-                                                   -np.sin(theta)*np.cos(phi),
-                                                   np.cos(theta)]
-
+        if 'Sky Texture' in tree.nodes:
+            tree.nodes['Sky Texture'].sun_direction = \
+                [np.sin(theta)*np.sin(phi),
+                 -np.sin(theta)*np.cos(phi),
+                 np.cos(theta)]
         # Randomise clouds
         sky = self.opts['sky']
-        if 'noise_scale' in sky:
+        if 'noise_scale' in sky and 'Noise Texture' in tree.nodes:
             tree.nodes['Noise Texture'].inputs['Scale'].default_value \
                 = np.random.lognormal(np.log(sky['noise_scale']['mean']),
                                       sky['noise_scale']['log_sigma'])
-        if 'cloud_ramp' in sky:
+        if 'cloud_ramp' in sky and 'ColorRamp' in tree.nodes:
             ramp = tree.nodes['ColorRamp'].color_ramp
             ramp.elements[0].position = np.random.uniform(
                 sky['cloud_ramp']['min'], sky['cloud_ramp']['max'])
             ramp.elements[1].position = ramp.elements[0].position \
                 + sky['cloud_ramp']['diff']
-        if 'translate' in sky:
+        if 'translate' in sky and 'Mapping' in tree.nodes:
             tree.nodes['Mapping'].translation[0] = np.random.uniform(
                 sky['translate'][0], sky['translate'][1])
 

@@ -38,18 +38,5 @@
     "clamp_indirect": 0.8,
     "compositing_mist": 0.04,
     "sky": {
-        "noise_scale": {
-            "log_sigma": 0.25,
-            "mean": 4.0
-        },
-        "translate": [
-            0.0,
-            4.0
-        ],
-        "cloud_ramp": {
-            "max": 0.8,
-            "diff": 0.2,
-            "min": 0.2
-        }
     }
 }
