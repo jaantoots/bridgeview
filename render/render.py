@@ -154,7 +154,7 @@ class Render():
 
     def new_sun(self):
         """Add a new sun to the scene and set its parameters."""
-        bpy.ops.object.lamd_add(type='SUN')
+        bpy.ops.object.lamp_add(type='SUN')
         sun = bpy.context.object
         # Set the parameters
         sun.data.shadow_soft_size = self.opts['sun_size']
