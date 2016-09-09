@@ -32,7 +32,7 @@ pointing to other files. Of these, `render` for render parameters,
 `labels` for defining colours to use for labels, `textures` for
 defining the appropriate textures for different objects and `out` as
 an empty placeholder need to be provided. Trees (or any other objects
-to be placed repeatedly on the landscape) can be placed at runtime if
+to be placed repeatedly on the landscape) can be placed at run-time if
 at least one instance of the objects is present in the file and
 `trees` file is provided (also see [treegrow](#placing-trees)). The
 format of these files is discussed (with example configurations) in
@@ -42,14 +42,14 @@ format of these files is discussed (with example configurations) in
 
 `treegrow.py` can be used to place objects randomly in a scene
 starting from a list of seed objects to use. This is useful for
-creatng trees and other vegetation in the model quickly and hopefully
+creating trees and other vegetation in the model quickly and hopefully
 without collisions with other objects. Trees are grown in a chain
 around the starting point such that on average a small cluster is
 formed.
 
 If this is run from the command-line, it is possible to output the
 coordinates of placed objects to a file. This file can then be used by
-`generate.py` to place them at runtime only.
+`generate.py` to place them at run-time only.
 
 ### Render package
 
