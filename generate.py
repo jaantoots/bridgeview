@@ -4,7 +4,7 @@
 model=$1
 shift
 
-exec ./blender "$model" --background --python "$0" -- "$@"
+exec ./blender "$model" --factory-startup --background --python "$0" -- "$@"
 
 exit 127
 '''
@@ -171,10 +171,10 @@ def main():
     parser.add_argument(
         "-l", "--all-levels", action='store_true',
         help="Generate all levels of semantic labels (default only level 2)")
-    parser.add_argument("-g", "--gpu", action="store_true",
-                        help="Use GPU for visual and depth rendering")
-    parser.add_argument("-f", "--force-cuda", metavar="DEVICE",
-                        help="Use given CUDA compute device")
+    parser.add_argument(
+        "-g", "--gpu", nargs="?", const="", metavar="DEVICE",
+        help="Use GPU device for visual and depth rendering."
+        "If specified without an argument, the default will be selected.")
     parser.add_argument(
         "-r", "--render", metavar="TYPE", nargs="*",
         help="Render only given types; possible options: \"visual\", "
@@ -201,11 +201,16 @@ def main():
     for key in files:
         files[key] = os.path.join(path, os.path.basename(files[key]))
 
-    gen = Generate(path, files)
-    if args.force_cuda is not None:
+    # Use GPU if specified
+    gpu = False
+    if args.gpu is not None:
+        gpu = True
         bpy.context.user_preferences.system.compute_device_type = 'CUDA'
-        bpy.context.user_preferences.system.compute_device = args.force_cuda
-    gen.run(args.size, args.all_levels, args.gpu, args.render)
+        if len(args.gpu) > 0:
+            bpy.context.user_preferences.system.compute_device = args.gpu
+    # Generate data
+    gen = Generate(path, files)
+    gen.run(args.size, args.all_levels, gpu, args.render)
     print()
 
 if __name__ == "__main__":
