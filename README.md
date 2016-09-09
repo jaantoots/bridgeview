@@ -1,19 +1,17 @@
 # Generate synthetic data with semantic labels
 
-Bridgeview provides scripts to render visual, semantic and depth data
-using [Blender]. It was developed to generate synthetic data for
-training neural networks on images of bridges (but could probably be
-extended to other types of models) for semantic segmentation.
+Bridgeview provides scripts to render visual, semantic and depth
+images using [Blender]. It was developed to generate synthetic data
+for training neural networks on images of bridges (but could probably
+be extended to other types of models) for semantic segmentation.
 
-- Data is generated using `generate.py`
-- Configuration files are required for data generation
+- Generate data with `generate.py` (requires configuration files)
 - Add trees randomly or from a file using `treegrow.py`
 
 The `render` package provides the plumbing methods using Blender. Main
-functionality is rendering the visual, semantic and depth scenes as
-implemented in `render/render.py`.  Additional useful modules for
-quickly defining labels and multiple textures for objects and
-procedural modifications are provided.
+functionality is rendering the visual, semantic and depth data.
+Additional useful modules for quickly defining labels and multiple
+textures for objects and procedural modifications are provided.
 
 ## Overview
 
