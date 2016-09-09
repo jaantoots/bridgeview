@@ -38,6 +38,34 @@ at least one instance of the objects is present in the file and
 format of these files is discussed (with example configurations) in
 [examples](examples/).
 
+### Examples
+
+Generate all images using the GPU when possible (for visual and depth
+rendering using Cycles Render, no effect on semantic rendering):
+
+```
+./generate.py path/to/model.blend --conf path/to/model-conf.json \
+    --name 2016-09-09-some-descriptive-folder-name --size 128 --gpu
+```
+
+Generate only points (and then use multiple instances to render
+different types of images):
+
+```
+./generate.py path/to/model.blend --conf path/to/model-conf.json \
+    --name 2016-09-09-model-commitinfo --size 128 --render
+```
+
+Generate visual and depth images using a specific GPU (if the folder
+and configuration files exist, the previously generated points are
+used automatically, and there is no need to specify the number of
+images):
+
+```
+./generate.py path/to/model.blend --conf path/to/model-conf.json \
+    --name 2016-09-09-model-commitinfo --render visual depth --gpu CUDA_1
+```
+
 ### Placing trees
 
 `treegrow.py` can be used to place objects randomly in a scene
