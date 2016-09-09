@@ -109,9 +109,13 @@ class Render():
 
         # Initialise objects, terrain should be the first item in landscape
         self.objects = objects[:]
-        self.landscape = helpers.all_instances(
-            self.opts['landscape'][0], self.objects)[0]
-        self.landscape_tree = helpers.landscape_tree(self.landscape)
+        self.landscape = None
+        self.landscape_tree = None
+        landscape_list = helpers.all_instances(
+            self.opts['landscape'][0], self.objects)
+        if len(landscape_list) > 0:
+            self.landscape = landscape_list[0]
+            self.landscape_tree = helpers.landscape_tree(self.landscape)
 
         # Remove landscape for bounding sphere calculation
         for obj_name in self.opts['landscape']:
@@ -175,6 +179,7 @@ class Render():
         if rotation is None:
             rotation = self.random_sun()
         self.sun.rotation_euler = rotation
+        # TODO: method is very specific to the node tree used in models
         self.set_sky()  # Set sun direction and randomise clouds
         return self.sun
 
@@ -211,18 +216,23 @@ class Render():
         distance = min_distance * np.random.normal(
             self.opts['camera_distance_factor']['mean'],
             self.opts['camera_distance_factor']['sigma'])
-        theta = np.pi/2
         phi = np.random.uniform(0, 2*np.pi)
+        # No landscape means any direction is fine
+        if self.landscape is None:
+            theta = np.random.uniform(0, np.pi)
+        else:
+            theta = np.pi/2
+        # Set the camera to face near sphere centre
+        rotation = np.array([theta, 0, np.pi + phi])
+        rotation += np.random.randn(3) * self.opts['camera_noise']
         # Location axes rotated due to default camera orientation
         location = sphere['centre'] + distance * np.array(
             [np.sin(theta)*np.sin(-phi),
              np.sin(theta)*np.cos(phi),
              np.cos(theta)])
-        # Place above landscape by specified amount
-        location = self._choose_height(location)
-        # Set the camera to face near sphere centre
-        rotation = np.array([theta, 0, np.pi + phi])
-        rotation += np.random.randn(3) * self.opts['camera_noise']
+        if self.landscape is not None:
+            # Place above landscape by specified amount
+            location = self._choose_height(location)
         return focal_length, location.tolist(), rotation.tolist()
 
     def random_camera_line(self, focal_length):
@@ -313,11 +323,12 @@ class Render():
             output = tree.nodes.new('CompositorNodeComposite')
             screen = tree.nodes.new('CompositorNodeMixRGB')
             screen.blend_type = 'SCREEN'
-            map = tree.nodes.new('CompositorNodeMapValue')
-            map.size[0] = self.opts['compositing_mist']
+            map_value = tree.nodes.new('CompositorNodeMapValue')
+            map_value.size[0] = self.opts['compositing_mist']
             tree.links.new(render_layers.outputs['Image'], screen.inputs[1])
-            tree.links.new(render_layers.outputs['Mist'], map.inputs['Value'])
-            tree.links.new(map.outputs['Value'], screen.inputs[0])
+            tree.links.new(render_layers.outputs['Mist'],
+                           map_value.inputs['Value'])
+            tree.links.new(map_value.outputs['Value'], screen.inputs[0])
             tree.links.new(screen.outputs['Image'], output.inputs['Image'])
         bpy.data.scenes[0].render.filepath = path
         bpy.ops.render.render(write_still=True)

@@ -12,26 +12,7 @@
     "sun_size": 0.02,
     "sun_strength": 4,
     "landscape": [
-        "landscape__landscape",
-        "water__plane",
-        "road__plane",
-        "highway__plane",
-        "tree_green__tree",
-        "tree_grey__tree",
-        "tree_blue__tree",
-        "tree_darkgreen__tree",
-        "tree_black__tree",
-        "tree_yellow__tree",
-        "tree_lightgreen__tree",
-        "tree_brown__tree",
-        "tree_pale__tree",
-        "bush_dark__bush",
-        "bush_black__bush",
-        "bush_round__bush",
-        "bush_pale__bush",
-        "bush_darkgreen__bush",
-        "bush_green__bush",
-        "bush__bush"
+        "Landscape"
     ],
     "camera_clearance": [
         3,
