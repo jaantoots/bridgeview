@@ -1,0 +1,207 @@
+{
+    "sun_theta": [
+        0,
+        1.48352986419518
+    ],
+    "sky": {
+        "noise_scale": {
+            "log_sigma": 0.25,
+            "mean": 4.0
+        },
+        "translate": [
+            0.0,
+            4.0
+        ],
+        "cloud_ramp": {
+            "max": 0.8,
+            "diff": 0.2,
+            "min": 0.2
+        }
+    },
+    "sun_color": [
+        1.0,
+        1.0,
+        0.984313725490196,
+        1.0
+    ],
+    "sun_size": 0.02,
+    "camera_clearance": [
+        3,
+        4.6
+    ],
+    "sun_strength": 4,
+    "film_exposure": 2,
+    "camera_noise": 0.01,
+    "resolution": [
+        512,
+        512
+    ],
+    "cycles_samples": 64,
+    "landscape": [
+        "landscape__landscape",
+        "water__plane",
+        "road__plane",
+        "highway__plane",
+        "tree_green__tree",
+        "tree_grey__tree",
+        "tree_blue__tree",
+        "tree_darkgreen__tree",
+        "tree_black__tree",
+        "tree_yellow__tree",
+        "tree_lightgreen__tree",
+        "tree_brown__tree",
+        "tree_pale__tree",
+        "bush_dark__bush",
+        "bush_black__bush",
+        "bush_round__bush",
+        "bush_pale__bush",
+        "bush_darkgreen__bush",
+        "bush_green__bush",
+        "bush__bush"
+    ],
+    "camera_distance_factor": {
+        "mean": 0.8,
+        "sigma": 0.1
+    },
+    "camera_lens": {
+        "log_sigma": 0.25,
+        "mean": 16
+    },
+    "camera_sigma": 0.26,
+    "camera_location_noise": 0.1,
+    "camera_clip_end": 100000,
+    "clamp_indirect": 0.8,
+    "compositing_mist": 0.04,
+    "spheres": {
+        "s0": {
+            "centre": [
+                -37,
+                -45,
+                155
+            ],
+            "radius": 10
+        },
+        "s1": {
+            "centre": [
+                -30,
+                -35,
+                155
+            ],
+            "radius": 10
+        },
+        "s2": {
+            "centre": [
+                -25,
+                -28,
+                155
+            ],
+            "radius": 10
+        },
+        "s3": {
+            "centre": [
+                -20,
+                -21,
+                155
+            ],
+            "radius": 10
+        },
+        "s4": {
+            "centre": [
+                -15,
+                -14,
+                155
+            ],
+            "radius": 10
+        },
+        "s5": {
+            "centre": [
+                -10,
+                -7,
+                155
+            ],
+            "radius": 10
+        },
+        "s6": {
+            "centre": [
+                -5,
+                0,
+                155
+            ],
+            "radius": 10
+        }
+    },
+    "lines": {
+        "diag": {
+            "end": [
+                -59,
+                -67,
+                158
+            ],
+            "start": [
+                11,
+                15,
+                159
+            ]
+        },
+        "ldown": {
+            "end": [
+                -6,
+                -33,
+                150
+            ],
+            "start": [
+                18,
+                4,
+                160
+            ]
+        },
+        "lup": {
+            "end": [
+                -42,
+                -66,
+                158
+            ],
+            "start": [
+                -4,
+                -38,
+                150
+            ]
+        },
+        "rdown": {
+            "end": [
+                -30,
+                1,
+                149
+            ],
+            "start": [
+                -8,
+                25,
+                156
+            ]
+        },
+        "rup": {
+            "end": [
+                -57,
+                -32,
+                157
+            ],
+            "start": [
+                -23,
+                -3,
+                151
+            ]
+        },
+        "low": {
+            "end": [
+                -33,
+                7,
+                151
+            ],
+            "start": [
+                -21,
+                -58,
+                153
+            ]
+        }
+    }
+}

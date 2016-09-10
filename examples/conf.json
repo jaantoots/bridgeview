@@ -1,0 +1,7 @@
+{
+    "out": "out.json",
+    "render": "render.json",
+    "textures": "textures.json",
+    "labels": "labels.json",
+    "trees": "trees.json"
+}

@@ -1,0 +1,128 @@
+{
+    "groups": {
+        "support": [
+            "column__box",
+            "panel__plane",
+            "pier__box",
+            "cap__box",
+            "column__cylinder",
+            "beam_support__box",
+            "slab__box",
+            "wall__plane",
+            "abutment__box",
+            "deck__box",
+            "deck__curve",
+            "piles__cylinder",
+            "wing_wall__box",
+            "foundation__box",
+            "footing__box",
+            "beam__Y",
+            "beam__I",
+            "beam__box",
+            "girder__box",
+            "bearing__box",
+            "pier__curve",
+            "pier__triangle"
+        ],
+        "decorative": [
+            "parapet__box",
+            "kerb__box"
+        ],
+        "road": [
+            "road__plane"
+        ],
+        "tarmac": [
+            "highway__plane",
+            "sidewalk__plane",
+            "ramp__plane"
+        ],
+        "terrain": [
+            "landscape__landscape"
+        ],
+        "metal": [
+            "stairs__stairs",
+            "rail__bar",
+            "handrail__gridbar"
+        ],
+        "steel": [
+            "parapet_steel__box",
+            "girder_steel__box",
+            "beam_steel__I",
+            "beam_steel__Y",
+            "light_pole__bar"
+        ],
+        "misc": [
+            "misc__misc"
+        ],
+        "water": [
+            "water__plane"
+        ]
+    },
+    "textures": {
+        "support": [
+            "Concrete",
+            "Concrete1",
+            "HoledConcrete",
+            "ConcreteFine",
+            "ConcreteSmooth"
+        ],
+        "terrain": [
+            "Landscape0",
+            "Landscape1",
+            "Landscape2",
+            "Landscape3",
+            "Landscape4"
+        ],
+        "road": [
+            "Road1",
+            "Road2",
+            "Road3"
+        ],
+        "tarmac": [
+            "Tarmac"
+        ],
+        "decorative": [
+            "Stone",
+            "SmallBrick",
+            "LinedConcrete",
+            "Concrete1",
+            "CrackedStone"
+        ],
+        "metal": [
+            "Metal",
+            "Aluminium",
+            "AnodizedMetal",
+            "Brass",
+            "BrassOld",
+            "CopperOld",
+            "CopperReddish",
+            "CopperYellowish",
+            "DarkMetal",
+            "Metal1",
+            "Metal2",
+            "StainlessSteel",
+            "StainlessSteel2"
+        ],
+        "steel": [
+            "Metal",
+            "DarkMetal",
+            "StainlessSteel",
+            "StainlessSteel2"
+        ],
+        "misc": [
+            "Concrete",
+            "Stone",
+            "BigBrick",
+            "SmallBrick",
+            "Concrete1",
+            "HoledConcrete",
+            "LinedConcrete",
+            "ConcreteFine",
+            "ConcreteSmooth",
+            "CrackedStone"
+        ],
+        "water": [
+            "Water"
+        ]
+    }
+}
