@@ -35,6 +35,7 @@
         512
     ],
     "cycles_samples": 64,
+    "film_exposure": 2,
     "clamp_indirect": 0.8,
     "compositing_mist": 0.04,
     "sky": {
