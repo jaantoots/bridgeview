@@ -1,5 +1,10 @@
 # Generate synthetic data with semantic labels
 
+A short presentation on this project is
+available [here](https://github.com/jaantoots/bridgeview-talk).
+
+---
+
 Bridgeview provides scripts to render visual, semantic and depth
 images using [Blender]. It was developed to generate synthetic data
 for training neural networks on images of bridges (but could probably
